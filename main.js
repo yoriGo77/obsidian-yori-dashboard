@@ -1301,10 +1301,6 @@ const { createArchiveNote, buildArchiveBody } = __yd_require("lib/archive");
 
 const WEEK_LABELS_ZH = ["一", "二", "三", "四", "五", "六", "日"];
 const WEEK_LABELS_EN = ["M", "T", "W", "T", "F", "S", "S"];
-const MONTH_NAMES_ZH = [
-  "一月", "二月", "三月", "四月", "五月", "六月",
-  "七月", "八月", "九月", "十月", "十一月", "十二月"
-];
 const MONTH_NAMES_EN = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December"
@@ -1316,7 +1312,7 @@ const MONTH_SHORT_EN = [
 
 function getMonthLabel(year, monthIndex, lang) {
   if (lang === "en") return `${MONTH_NAMES_EN[monthIndex]} ${year}`;
-  return `${year}年${MONTH_NAMES_ZH[monthIndex]}`;
+  return `${year}年${monthIndex + 1}月`;
 }
 
 function getDayHeader(date, lang) {
@@ -2053,9 +2049,20 @@ function openDataLogSettings(ctx) {
   const modal = new FullPageModal(plugin.app, {
     title: t("dataLog.settingsTitle"),
     titleClass: "yd-settings-modal",
-    render: (root, instance) => renderDataLogSettings(root, ctx, instance)
+    render: (root, instance) => renderDataLogSettings(root, ctx, instance),
+    onClose: () => finalizeDataLogSettings(ctx)
   });
   modal.open();
+}
+
+async function finalizeDataLogSettings(ctx) {
+  const items = ctx.settings?.data?.dataLog?.items;
+  if (!Array.isArray(items)) return;
+  const filtered = items.filter((item) => (item.name || "").trim());
+  filtered.forEach((item, idx) => { item.order = idx; });
+  ctx.settings.data.dataLog.items = filtered;
+  await ctx.save();
+  ctx.refresh();
 }
 
 function renderDataLogSettings(root, ctx, modal) {
@@ -2137,13 +2144,7 @@ function renderDataLogSettings(root, ctx, modal) {
 
   const actions = root.createDiv({ cls: "yd-modal-actions yd-modal-actions-end" });
   const closeBtn = actions.createEl("button", { cls: "yd-modal-confirm", text: t("common.confirm") });
-  closeBtn.onclick = async () => {
-    settings.data.dataLog.items = items.filter((item) => (item.name || "").trim());
-    settings.data.dataLog.items.forEach((item, idx) => { item.order = idx; });
-    await ctx.save();
-    modal.close();
-    ctx.refresh();
-  };
+  closeBtn.onclick = () => modal.close();
 }
 
 module.exports = {
@@ -2428,7 +2429,8 @@ function openFullTaskBox(ctx) {
   const modal = new FullPageModal(plugin.app, {
     title: t("taskBox.fullTitle"),
     titleClass: "yd-taskbox-modal",
-    render: (root, instance) => renderFullTaskBox(root, ctx, instance)
+    render: (root, instance) => renderFullTaskBox(root, ctx, instance),
+    onClose: () => ctx.refresh()
   });
   modal.open();
 }
@@ -2490,9 +2492,19 @@ function openTaskBoxSettings(ctx) {
   const modal = new FullPageModal(plugin.app, {
     title: t("taskBox.settingsTitle"),
     titleClass: "yd-settings-modal",
-    render: (root, instance) => renderTaskBoxSettings(root, ctx, instance)
+    render: (root, instance) => renderTaskBoxSettings(root, ctx, instance),
+    onClose: () => finalizeTaskBoxSettings(ctx)
   });
   modal.open();
+}
+
+async function finalizeTaskBoxSettings(ctx) {
+  const boxes = ctx.settings?.data?.taskBox?.boxes;
+  if (!Array.isArray(boxes)) return;
+  ctx.settings.data.taskBox.boxes = boxes.filter((box) => (box.name || "").trim());
+  ctx.settings.data.taskBox.boxes.forEach((box, idx) => { box.order = idx; });
+  await ctx.save();
+  ctx.refresh();
 }
 
 function renderTaskBoxSettings(root, ctx, modal) {
@@ -2574,13 +2586,7 @@ function renderTaskBoxSettings(root, ctx, modal) {
 
   const actions = root.createDiv({ cls: "yd-modal-actions yd-modal-actions-end" });
   const closeBtn = actions.createEl("button", { cls: "yd-modal-confirm", text: t("common.confirm") });
-  closeBtn.onclick = async () => {
-    settings.data.taskBox.boxes = boxes.filter((box) => (box.name || "").trim());
-    settings.data.taskBox.boxes.forEach((box, idx) => { box.order = idx; });
-    await ctx.save();
-    modal.close();
-    ctx.refresh();
-  };
+  closeBtn.onclick = () => modal.close();
 }
 
 module.exports = {
@@ -2719,12 +2725,9 @@ function renderCheckInSection(parent, ctx) {
   const dateKey = ctx.state.focusDateKey || formatDateKey(new Date());
   const items = getItems(settings);
   const limit = ctx.getLimit("checkIn");
-  const visible = items.slice(0, limit);
   const list = wrap.createDiv({ cls: "yd-checkin-list" });
-  visible.forEach((item) => renderCheckInRow(list, item, dateKey, ctx));
-  if (items.length > limit) {
-    list.createDiv({ cls: "yd-events-overflow", text: `+ ${items.length - limit}` });
-  }
+  items.forEach((item) => renderCheckInRow(list, item, dateKey, ctx));
+  list.style.maxHeight = `${Math.max(1, limit) * 44 + 4}px`;
   if (items.length === 0) {
     list.createDiv({ cls: "yd-empty-tip", text: t("common.empty") });
   }
@@ -2856,9 +2859,20 @@ function openCheckInSettings(ctx) {
   const modal = new FullPageModal(plugin.app, {
     title: t("checkIn.settingsTitle"),
     titleClass: "yd-settings-modal",
-    render: (root, instance) => renderCheckInSettings(root, ctx, instance)
+    render: (root, instance) => renderCheckInSettings(root, ctx, instance),
+    onClose: () => finalizeCheckInSettings(ctx)
   });
   modal.open();
+}
+
+async function finalizeCheckInSettings(ctx) {
+  const items = ctx.settings?.data?.checkIn?.items;
+  if (!Array.isArray(items)) return;
+  const filtered = items.filter((item) => (item.name || "").trim());
+  filtered.forEach((item, idx) => { item.order = idx; });
+  ctx.settings.data.checkIn.items = filtered;
+  await ctx.save();
+  ctx.refresh();
 }
 
 function renderCheckInSettings(root, ctx, modal) {
@@ -2994,13 +3008,7 @@ function renderCheckInSettings(root, ctx, modal) {
 
   const actions = root.createDiv({ cls: "yd-modal-actions yd-modal-actions-end" });
   const closeBtn = actions.createEl("button", { cls: "yd-modal-confirm", text: t("common.confirm") });
-  closeBtn.onclick = async () => {
-    settings.data.checkIn.items = items.filter((item) => (item.name || "").trim());
-    settings.data.checkIn.items.forEach((item, idx) => { item.order = idx; });
-    await ctx.save();
-    modal.close();
-    ctx.refresh();
-  };
+  closeBtn.onclick = () => modal.close();
 }
 
 module.exports = {
@@ -3929,9 +3937,20 @@ function openSettings(ctx, side) {
   const modal = new FullPageModal(plugin.app, {
     title: t(titleKey),
     titleClass: "yd-settings-modal",
-    render: (root, instance) => renderSettings(root, ctx, side, instance)
+    render: (root, instance) => renderSettings(root, ctx, side, instance),
+    onClose: () => finalizeQuickEntries(ctx, side)
   });
   modal.open();
+}
+
+async function finalizeQuickEntries(ctx, side) {
+  const map = ctx.settings?.data?.quickEntries;
+  if (!map || !Array.isArray(map[side])) return;
+  const filtered = map[side].filter((entry) => (entry.name || "").trim());
+  filtered.forEach((entry, idx) => { entry.order = idx; });
+  map[side] = filtered;
+  await ctx.save();
+  ctx.refresh();
 }
 
 function renderSettings(root, ctx, side, modal) {
@@ -4068,13 +4087,7 @@ function renderSettings(root, ctx, side, modal) {
 
   const actions = root.createDiv({ cls: "yd-modal-actions yd-modal-actions-end" });
   const closeBtn = actions.createEl("button", { cls: "yd-modal-confirm", text: t("common.confirm") });
-  closeBtn.onclick = async () => {
-    settings.data.quickEntries[side] = entries.filter((entry) => (entry.name || "").trim());
-    settings.data.quickEntries[side].forEach((entry, idx) => { entry.order = idx; });
-    await ctx.save();
-    modal.close();
-    ctx.refresh();
-  };
+  closeBtn.onclick = () => modal.close();
 }
 
 module.exports = {
