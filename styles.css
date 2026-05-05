@@ -1,0 +1,1927 @@
+/* Full view host (covers Obsidian leaf area behind yd-root) */
+.yd-dashboard-host,
+.yd-view-content {
+  background-color: #f8f7f6 !important;
+}
+
+.yd-view-content {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.2s ease;
+}
+
+.yd-view-content:hover {
+  scrollbar-color: rgba(180, 180, 180, 0.5) transparent;
+}
+
+.yd-view-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.yd-view-content::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.yd-view-content:hover::-webkit-scrollbar-thumb {
+  background: rgba(180, 180, 180, 0.5);
+}
+
+.yd-view-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.yd-root {
+  --yd-accent: #99876c;
+  --yd-accent-deep: #af9165;
+  --yd-accent-soft: #efe8e0;
+  --yd-panel-bg: #f8f7f6;
+  --yd-section-bg: #ffffff;
+  --yd-section-border: #f4efe6;
+  --yd-card-bg: #f5ede1;
+  --yd-text: #5b4c33;
+  --yd-text-soft: #a89c87;
+  --yd-text-muted: #c2b8a4;
+  --yd-border: #ebe4d3;
+  --yd-add-color: #cecf96;
+  --yd-radius: 4px;
+  --yd-section-gap: 14px;
+  --yd-content-width: 758px;
+  --yd-col-left-width: 280px;
+  --yd-col-right-width: 424px;
+  --yd-col-gap: 14px;
+  --yd-fixed-inner-width: calc(var(--yd-col-left-width) + var(--yd-col-gap) + var(--yd-col-right-width));
+  box-sizing: border-box;
+  background-color: transparent;
+  color: var(--yd-text);
+  padding: 20px;
+  width: var(--yd-content-width);
+  margin: 0 auto;
+  font-family:
+    "STXihei", "华文细黑",
+    "PingFang SC", "苹方-简",
+    "Source Han Sans CN Light", "思源黑体 CN Light",
+    "Microsoft JhengHei Light",
+    "Microsoft YaHei Light", "微软雅黑 Light",
+    "Microsoft YaHei", "微软雅黑",
+    "Noto Sans CJK SC", "Noto Sans SC",
+    sans-serif;
+  font-size: 15px;
+}
+
+/* ====== layout ====== */
+.yd-grid {
+  display: grid;
+  grid-template-columns: var(--yd-col-left-width) var(--yd-col-right-width);
+  column-gap: var(--yd-col-gap);
+  align-items: stretch;
+  margin-top: var(--yd-section-gap);
+}
+
+.yd-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--yd-section-gap);
+  min-width: 0;
+}
+
+.yd-section {
+  background-color: var(--yd-section-bg);
+  border: 1px solid var(--yd-section-border);
+  border-radius: var(--yd-radius);
+  padding: 18px 22px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  position: relative;
+  min-width: 0;
+}
+
+.yd-section-taskbox {
+  padding-left: 26px;
+  padding-right: 26px;
+  padding-bottom: 20px;
+}
+
+.yd-section-planner {
+  padding-bottom: 20px;
+}
+
+.yd-section-moments {
+  padding-bottom: 20px;
+}
+
+.yd-section-header + * {
+  margin-top: 0;
+}
+
+/* hover-only scrollbar inside dashboard sections */
+.yd-section,
+.yd-section * {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.yd-section ::-webkit-scrollbar,
+.yd-section::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  background: transparent;
+}
+
+.yd-section:hover,
+.yd-section:hover * {
+  scrollbar-width: thin;
+}
+
+.yd-section:hover ::-webkit-scrollbar,
+.yd-section:hover::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.yd-section ::-webkit-scrollbar-thumb,
+.yd-section::-webkit-scrollbar-thumb {
+  background: rgba(180, 180, 180, 0.5);
+  border-radius: 3px;
+}
+
+.yd-section ::-webkit-scrollbar-track,
+.yd-section::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ====== section header ====== */
+.yd-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.yd-section-header-center {
+  justify-content: center;
+}
+
+.yd-section-header-center .yd-section-icon {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.yd-section-title {
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--yd-accent);
+  letter-spacing: 0.4px;
+}
+
+.yd-section-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: auto;
+  padding-top: 4px;
+  flex-shrink: 0;
+}
+
+/* ====== icon buttons (flat) ====== */
+.yd-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--yd-text-soft);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  box-shadow: none !important;
+}
+
+.yd-icon-btn:hover {
+  background-color: rgba(153, 135, 108, 0.08);
+  color: var(--yd-accent);
+}
+
+.yd-icon-btn .svg-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.yd-section-icon {
+  width: 28px;
+  height: 28px;
+  background: transparent !important;
+  color: var(--yd-accent) !important;
+}
+
+.yd-section-icon:hover {
+  color: var(--yd-accent-deep) !important;
+  background-color: rgba(153, 135, 108, 0.08) !important;
+}
+
+.yd-section-more-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  background-color: transparent !important;
+  border: none !important;
+  color: var(--yd-accent) !important;
+  box-shadow: none !important;
+}
+
+.yd-section-more-icon:hover {
+  background-color: rgba(153, 135, 108, 0.08) !important;
+  color: var(--yd-accent-deep) !important;
+}
+
+.yd-mini-arrow {
+  width: 24px;
+  height: 24px;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.yd-mini-arrow:hover {
+  background-color: rgba(153, 135, 108, 0.08) !important;
+}
+
+.yd-mini-arrow .svg-icon {
+  width: 14px;
+  height: 14px;
+}
+
+/* ====== mini calendar ====== */
+.yd-section-calendar {
+  width: var(--yd-fixed-inner-width);
+  padding-right: 0;
+  padding-bottom: 24px;
+  box-sizing: border-box;
+}
+
+.yd-calendar-body {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  column-gap: 32px;
+  align-items: start;
+  position: relative;
+  padding-left: 12px;
+  padding-right: 0;
+}
+
+.yd-calendar-mini {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding-left: 8px;
+}
+
+.yd-mini-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 32px;
+}
+
+.yd-mini-label {
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--yd-accent);
+  flex: 1;
+  text-align: center;
+}
+
+.yd-mini-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0;
+  font-size: 12px;
+  margin-top: 12px;
+}
+
+.yd-mini-weekday {
+  text-align: center;
+  color: var(--yd-text-muted);
+  padding: 4px 0;
+  font-weight: 500;
+  letter-spacing: 0.4px;
+  font-size: 12px;
+}
+
+.yd-mini-cell {
+  text-align: center;
+  padding: 4px 0;
+  border-radius: 50%;
+  cursor: pointer;
+  color: #856b33;
+  transition: all 0.15s ease;
+  font-size: 13px;
+}
+
+.yd-mini-cell.is-out {
+  color: #c8c4ba;
+  opacity: 0.6;
+}
+
+.yd-mini-cell.is-today {
+  color: var(--yd-accent-deep);
+  font-weight: 600;
+}
+
+.yd-mini-cell.is-focus {
+  background-color: var(--yd-accent-soft);
+  color: var(--yd-accent-deep);
+  font-weight: 700;
+}
+
+.yd-mini-cell:hover:not(.is-focus) {
+  background-color: rgba(175, 145, 101, 0.12);
+}
+
+/* ====== daily events column ====== */
+.yd-calendar-events {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-left: 8px;
+}
+
+.yd-events-head {
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--yd-accent);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+}
+
+.yd-events-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-height: 220px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 2px;
+}
+
+.yd-calendar-more {
+  position: absolute !important;
+  right: 26px;
+  bottom: 14px;
+}
+
+/* ====== rows ====== */
+.yd-event-row,
+.yd-task-row,
+.yd-moment-row,
+.yd-planner-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.yd-event-row {
+  gap: 4px;
+}
+
+.yd-event-row:hover,
+.yd-task-row:hover,
+.yd-moment-row:hover,
+.yd-planner-row:hover {
+  background-color: rgba(255, 255, 255, 0.55);
+}
+
+.yd-event-row input[type="checkbox"],
+.yd-task-row input[type="checkbox"] {
+  margin-top: 4px;
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.yd-dashboard-host,
+.yd-view-content,
+.yd-fullpage-modal {
+  font-family:
+    "STXihei", "华文细黑",
+    "PingFang SC", "苹方-简",
+    "Source Han Sans CN Light", "思源黑体 CN Light",
+    "Microsoft JhengHei Light",
+    "Microsoft YaHei Light", "微软雅黑 Light",
+    "Microsoft YaHei", "微软雅黑",
+    "Noto Sans CJK SC", "Noto Sans SC",
+    sans-serif;
+  --yd-accent: #99876c;
+  --yd-accent-deep: #af9165;
+  --yd-accent-soft: #efe8e0;
+  --yd-text: #5b4c33;
+  --yd-text-soft: #a89c87;
+  --yd-text-muted: #c2b8a4;
+  --yd-border: #ebe4d3;
+  --checkbox-color: #c4b6a0;
+  --checkbox-color-hover: #b8a994;
+  --checkbox-border-color: #c4b6a0;
+  --checkbox-border-color-hover: #b8a994;
+  --checkbox-marker-color: #ffffff;
+}
+
+.yd-dashboard-host input[type="checkbox"],
+.yd-fullpage-modal input[type="checkbox"] {
+  accent-color: #c4b6a0;
+}
+
+.yd-dashboard-host input[type="checkbox"]:checked,
+.yd-fullpage-modal input[type="checkbox"]:checked {
+  background-color: #c4b6a0 !important;
+  border-color: #c4b6a0 !important;
+  color: #ffffff !important;
+}
+
+.yd-dashboard-host input[type="checkbox"]:checked:hover,
+.yd-fullpage-modal input[type="checkbox"]:checked:hover {
+  background-color: #b8a994 !important;
+  border-color: #b8a994 !important;
+}
+
+.yd-event-row.is-done,
+.yd-task-row.is-done {
+  opacity: 0.65;
+}
+
+.yd-event-row.is-done .yd-event-text,
+.yd-task-row.is-done .yd-task-text {
+  text-decoration: line-through;
+  color: var(--yd-text-muted);
+}
+
+.yd-event-text,
+.yd-task-text,
+.yd-moment-text,
+.yd-planner-text {
+  flex: 1;
+  word-break: break-word;
+  white-space: pre-wrap;
+  font-size: 15px;
+  color: var(--yd-text);
+  line-height: 1.55;
+}
+
+.yd-planner-cell .yd-planner-text {
+  color: var(--yd-text);
+}
+
+.yd-planner-cell .yd-planner-bullet {
+  color: var(--yd-text);
+}
+
+.yd-planner-section-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 320px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.yd-planner-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.yd-planner-section-list .yd-planner-month {
+  color: var(--yd-text-muted);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 2px 4px;
+  letter-spacing: 0.4px;
+  margin-bottom: 4px;
+}
+
+.yd-task-bullet,
+.yd-planner-bullet {
+  color: var(--yd-text-soft);
+  font-weight: 700;
+  margin-right: 2px;
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+
+.yd-event-editor {
+  width: 100%;
+  border: 1px solid var(--yd-border);
+  border-radius: 4px;
+  background-color: #fff;
+  padding: 6px 8px;
+  resize: none;
+  font-family: inherit;
+  font-size: 15px;
+  color: var(--yd-text);
+  outline: none;
+  min-height: 32px;
+}
+
+.yd-event-editor:focus {
+  border-color: var(--yd-accent-deep);
+  box-shadow: 0 0 0 2px rgba(175, 145, 101, 0.15);
+}
+
+.yd-inline-editor {
+  margin-top: 4px;
+}
+
+.yd-section-calendar .yd-inline-editor {
+  padding-right: 36px;
+}
+
+/* ====== add buttons (text-only, same size as title) ====== */
+.yd-add-button {
+  background: transparent !important;
+  border: none !important;
+  color: var(--yd-add-color) !important;
+  padding: 6px 0 6px 6px;
+  margin-left: 0;
+  cursor: pointer;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  margin-top: 4px;
+  text-align: left;
+  align-self: flex-start;
+  transition: color 0.18s ease;
+  box-shadow: none !important;
+}
+
+.yd-add-button:hover {
+  color: #b9bb7e !important;
+  background: transparent !important;
+}
+
+.yd-section-moments .yd-add-button {
+  padding-left: 108px;
+}
+
+/** dashboard 区块的 +Add 按钮的"+"与上方条目"文字"左对齐（避开复选框 / 圆点） */
+.yd-section-calendar .yd-add-button {
+  padding-left: 30px;
+}
+
+.yd-section-taskbox > .yd-add-button {
+  padding-left: 24px;
+}
+
+.yd-section-planner > .yd-add-button {
+  padding-left: 26px;
+}
+
+.yd-section-taskbox .yd-section-footer,
+.yd-section-planner .yd-section-footer {
+  position: absolute;
+  right: 26px;
+  bottom: 20px;
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.yd-events-overflow {
+  font-size: 12px;
+  color: var(--yd-text-muted);
+  padding: 2px 6px;
+}
+
+.yd-empty-tip {
+  font-size: 13px;
+  color: var(--yd-text-muted);
+  font-style: italic;
+  padding: 4px 6px;
+}
+
+/* ====== data log ====== */
+.yd-datalog-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 320px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.yd-datalog-row {
+  display: flex;
+  align-items: center;
+  padding: 7px 0;
+  font-size: 15px;
+}
+
+.yd-datalog-name {
+  width: 60px;
+  flex-shrink: 0;
+  color: var(--yd-text);
+  font-weight: 500;
+  text-align: right;
+  padding-right: 8px;
+}
+
+.yd-datalog-value {
+  color: var(--yd-accent);
+  cursor: pointer;
+  text-align: left;
+  padding: 2px 4px;
+  border-radius: 0;
+  border-bottom: 1px solid var(--yd-text-muted);
+  font-variant-numeric: tabular-nums;
+  width: 130px;
+  font-size: 16px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.yd-datalog-value .yd-inline-input {
+  color: var(--yd-accent);
+}
+
+.yd-datalog-value:hover {
+  background-color: rgba(175, 145, 101, 0.08);
+}
+
+.yd-datalog-more {
+  margin-left: 8px;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.yd-datalog-more .svg-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.yd-inline-input {
+  border: 1px solid var(--yd-accent-deep);
+  border-radius: 4px;
+  padding: 1px 4px;
+  font-size: 15px;
+  color: var(--yd-text);
+  background: #fff;
+  outline: none;
+  width: 130px;
+}
+
+/* ====== task box ====== */
+.yd-taskbox-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 420px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.yd-taskbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.yd-taskbox-name {
+  color: var(--yd-text-muted);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 2px 4px;
+  letter-spacing: 0.4px;
+  text-transform: none;
+  margin-bottom: 2px;
+}
+
+.yd-task-row-bullet {
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+.yd-task-row-bullet .yd-task-text {
+  color: var(--yd-text);
+}
+
+.yd-task-composer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0;
+  background-color: transparent;
+  border-radius: 0;
+}
+
+.yd-section-taskbox > .yd-task-composer,
+.yd-section-planner > .yd-task-composer {
+  margin-top: -14px;
+}
+
+.yd-task-composer textarea {
+  flex: 1;
+  width: 100%;
+}
+
+.yd-composer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.yd-composer-header .yd-select {
+  flex: 0 0 auto;
+}
+
+.yd-composer-more {
+  position: static !important;
+  flex: 0 0 auto;
+}
+
+.yd-section-taskbox:has(> .yd-task-composer) > .yd-section-footer,
+.yd-section-planner:has(> .yd-task-composer) > .yd-section-footer {
+  display: none;
+}
+
+.yd-select {
+  border: 1px solid var(--yd-border);
+  border-radius: 4px;
+  padding: 4px 6px;
+  background-color: transparent;
+  color: var(--yd-text);
+  font-size: 13px;
+  min-width: 80px;
+}
+
+.yd-planner-composer .yd-select {
+  min-width: 70px;
+  flex-shrink: 0;
+}
+
+/* ====== check-in ====== */
+.yd-checkin-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 8px;
+  max-height: 320px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.yd-checkin-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 2px 4px 2px 11px;
+}
+
+.yd-checkin-btn {
+  width: 50px;
+  height: 26px;
+  border-radius: 4px;
+  border: 1px dashed var(--yd-text-muted);
+  background: transparent;
+  cursor: pointer;
+  color: #a4a098 !important;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  letter-spacing: 0.5px;
+  box-shadow: none !important;
+}
+
+.yd-checkin-btn.is-done {
+  border-style: solid;
+  color: #fff !important;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.yd-checkin-name {
+  font-size: 15px;
+  color: var(--yd-text);
+}
+
+/* ====== moments ====== */
+.yd-moments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-height: 320px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.yd-moment-row {
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  gap: 10px;
+  align-items: baseline;
+  padding: 4px 6px;
+  border-radius: 4px;
+}
+
+.yd-moment-time {
+  color: var(--yd-text-muted);
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.55;
+  text-align: right;
+  padding-right: 8px;
+  white-space: nowrap;
+}
+
+.yd-moment-composer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px;
+  background-color: rgba(255, 255, 255, 0.5);
+  border-radius: 4px;
+  margin-top: 4px;
+}
+
+.yd-moment-time-input {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.yd-time-input {
+  width: 48px;
+  border: 1px solid var(--yd-border);
+  border-radius: 4px;
+  text-align: center;
+  padding: 2px 4px;
+  background-color: transparent;
+  color: var(--yd-text);
+  font-size: 13px;
+}
+
+.yd-time-colon {
+  color: var(--yd-text-soft);
+  font-weight: 600;
+}
+
+.yd-time-ampm {
+  border: 1px solid var(--yd-border);
+  background-color: transparent;
+  color: var(--yd-text-soft);
+  border-radius: 4px;
+  padding: 2px 8px;
+  cursor: pointer;
+  font-size: 13px;
+  box-shadow: none !important;
+}
+
+.yd-time-ampm.is-active {
+  background-color: var(--yd-accent-deep);
+  color: #fff;
+  border-color: var(--yd-accent-deep);
+}
+
+/* ====== monthly planner ====== */
+.yd-planner-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 280px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.yd-planner-month {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--yd-accent);
+  letter-spacing: 1px;
+  padding: 2px 4px;
+}
+
+/* ====== quick entries ====== */
+.yd-quick-side {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-height: 60px;
+}
+
+.yd-quick-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.yd-quick-button {
+  border: 1px solid var(--yd-border);
+  background-color: transparent;
+  color: var(--yd-text);
+  border-radius: 4px;
+  padding: 6px 16px;
+  cursor: pointer;
+  font-size: 15px;
+  box-shadow: none !important;
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+  user-select: none;
+}
+
+.yd-quick-button:hover {
+  background-color: rgba(175, 145, 101, 0.06);
+}
+
+.yd-quick-button.is-dragging {
+  opacity: 0.45;
+}
+
+.yd-quick-button.is-drop-target {
+  outline: 2px dashed var(--yd-accent-deep);
+  outline-offset: 2px;
+}
+
+.yd-quick-blank {
+  flex: 1;
+  min-height: 40px;
+  display: flex;
+  align-items: flex-start;
+  padding-top: 6px;
+}
+
+.yd-quick-add {
+  border: 1px dashed var(--yd-add-color) !important;
+  background: transparent !important;
+  color: var(--yd-add-color) !important;
+  border-radius: 4px;
+  padding: 5px 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0.3px;
+  opacity: 0;
+  transition: opacity 0.18s ease, color 0.18s ease;
+  align-self: flex-start;
+  box-shadow: none !important;
+}
+
+.yd-quick-blank:hover .yd-quick-add {
+  opacity: 1;
+}
+
+.yd-quick-add:hover {
+  color: #b9bb7e !important;
+}
+
+/* ====== modals ====== */
+.yd-fullpage-modal .modal {
+  width: min(900px, 90vw);
+  max-height: 86vh;
+}
+
+.yd-fullpage-modal.yd-taskbox-modal .modal {
+  width: min(1080px, 94vw);
+}
+
+.yd-fullpage-modal .yd-add-button {
+  color: #cecf96 !important;
+}
+
+.yd-fullpage-modal .yd-add-button:hover {
+  color: #b9bb7e !important;
+}
+
+.yd-fullpage-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 4px 18px;
+  color: var(--yd-text);
+}
+
+.yd-fullpage-modal .modal-title {
+  padding-left: 18px;
+  padding-right: 18px;
+  padding-bottom: 4px;
+  font-size: 18px;
+  margin-bottom: 0;
+}
+
+.yd-fullpage-modal.yd-settings-modal .yd-settings-desc {
+  margin-top: -10px;
+  margin-bottom: 16px;
+  color: #9b938a;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.yd-fullpage-modal.yd-settings-modal .yd-settings-hint {
+  margin-top: -12px;
+  margin-bottom: 8px;
+  color: #b6ada1;
+  font-size: 12px;
+}
+
+.yd-fullpage-modal.yd-settings-modal .yd-add-button {
+  font-size: 17px;
+  font-weight: 600;
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+.yd-week-modal .modal {
+  width: min(760px, 92vw);
+}
+
+.yd-week-top,
+.yd-history-top {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  position: relative;
+  margin-bottom: 12px;
+}
+
+.yd-week-nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.yd-history-archive {
+  position: absolute !important;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.yd-week-top .yd-section-more-icon {
+  position: absolute !important;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.yd-week-range,
+.yd-history-title {
+  font-size: 17px;
+  color: var(--yd-accent);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.yd-week-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 24px;
+  row-gap: 12px;
+}
+
+.yd-week-col {
+  border: none;
+  border-radius: 0;
+  padding: 6px 4px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background-color: transparent;
+  min-height: auto;
+}
+
+.yd-week-col-day {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--yd-text-muted);
+  cursor: pointer;
+  padding: 4px 4px 4px;
+  border-bottom: 1px solid var(--yd-text-muted);
+  letter-spacing: 0;
+  margin-bottom: 4px;
+}
+
+.yd-week-col .yd-event-text {
+  color: var(--yd-text);
+}
+
+.yd-week-col .yd-add-button {
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0;
+  padding-left: 4px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+}
+
+.yd-week-col:hover .yd-add-button {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.yd-week-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* ====== history ====== */
+.yd-history-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 6px;
+  padding: 4px;
+}
+
+.yd-history-cell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px solid var(--yd-border);
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.yd-history-date {
+  color: var(--yd-text-muted);
+  font-size: 13px;
+}
+
+.yd-history-value {
+  font-weight: 500;
+  color: var(--yd-accent);
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.yd-history-value .yd-inline-input {
+  color: var(--yd-accent);
+}
+
+.yd-history-value:hover {
+  background-color: rgba(175, 145, 101, 0.08);
+}
+
+/* ====== check-in monthly ====== */
+.yd-checkin-modal .yd-history-top {
+  margin-bottom: 28px;
+}
+
+.yd-checkin-modal .yd-fullpage-content {
+  padding-bottom: 32px;
+}
+
+.yd-checkin-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 8px 14px;
+  border: none;
+  border-radius: 0;
+  background-color: transparent;
+}
+
+.yd-checkin-block + .yd-checkin-block {
+  margin-top: 12px;
+  border-top: 1px solid #ececec;
+  padding-top: 18px;
+}
+
+.yd-checkin-blockhead {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+.yd-checkin-blockname {
+  text-align: center;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--yd-accent);
+}
+
+.yd-checkin-progress {
+  position: absolute;
+  right: 0;
+  font-size: 13px;
+  color: var(--yd-text-muted);
+}
+
+.yd-checkin-progress-done {
+  color: #c4b6a0;
+  font-weight: 600;
+}
+
+.yd-checkin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(28px, 1fr));
+  gap: 4px;
+}
+
+.yd-checkin-cell {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 4px;
+  background-color: var(--yd-section-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: var(--yd-text-muted);
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.yd-checkin-cell:hover {
+  transform: scale(1.05);
+}
+
+.yd-checkin-cell.is-done {
+  color: #fff;
+  font-weight: 600;
+}
+
+/* ====== task box modal ====== */
+.yd-taskbox-fullgrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 32px;
+  row-gap: 24px;
+}
+
+.yd-taskbox-fullcol {
+  border: none;
+  background-color: transparent;
+  padding: 4px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.yd-taskbox-fullcol .yd-taskbox-name {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--yd-text-muted);
+  text-transform: none;
+  letter-spacing: 0;
+  border-bottom: 1px solid var(--yd-text-muted);
+  padding: 4px 4px 4px;
+  margin-bottom: 2px;
+}
+
+.yd-taskbox-fullcol .yd-add-button {
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0;
+  padding-left: 4px;
+  margin-top: 4px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+}
+
+.yd-taskbox-fullcol:hover .yd-add-button {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.yd-taskbox-fulllist {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* ====== planner modal ====== */
+.yd-planner-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 32px;
+  row-gap: 0;
+  margin-top: 8px;
+}
+
+.yd-planner-cell {
+  border: none;
+  background-color: transparent;
+  padding: 10px 4px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.yd-planner-cell .yd-planner-month {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--yd-text-muted);
+  letter-spacing: 0;
+  border-bottom: 1px solid var(--yd-text-muted);
+  padding: 4px 4px 4px;
+  margin-bottom: 4px;
+}
+
+.yd-planner-cell .yd-add-button {
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0;
+  margin-top: 0;
+  padding-left: 4px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+}
+
+.yd-planner-cell:hover .yd-add-button {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ====== settings modal ====== */
+.yd-settings-modal .modal {
+  width: min(640px, 92vw);
+}
+
+.yd-settings-desc {
+  font-size: 13px;
+  color: #9b938a;
+  line-height: 1.5;
+}
+
+.yd-settings-hint {
+  font-size: 12px;
+  color: var(--yd-text-muted);
+  margin-top: -4px;
+}
+
+.yd-settings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.yd-settings-row {
+  display: grid;
+  grid-template-columns: 28px auto 1fr auto;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--yd-border);
+  background-color: transparent;
+}
+
+.yd-checkin-settings-row,
+.yd-quick-settings-row {
+  grid-template-columns: 28px auto 1fr auto auto;
+}
+
+.yd-settings-row.is-dragging {
+  opacity: 0.5;
+}
+
+.yd-settings-row.is-drop-target {
+  border-color: var(--yd-accent-deep);
+  background-color: rgba(175, 145, 101, 0.06);
+}
+
+.yd-drag-handle {
+  cursor: grab;
+  color: var(--yd-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  width: 24px;
+  height: 24px;
+}
+
+.yd-drag-handle-icon {
+  cursor: grab;
+}
+
+.yd-settings-input {
+  border: 1px solid var(--yd-border);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 14px;
+  color: var(--yd-text);
+  outline: none;
+  background-color: transparent;
+}
+
+.yd-settings-input:focus {
+  border-color: var(--yd-accent-deep);
+}
+
+.yd-settings-link {
+  border: 1px solid var(--yd-border);
+  background-color: transparent;
+  color: var(--yd-text);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 13px;
+  cursor: pointer;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  box-shadow: none !important;
+}
+
+.yd-settings-link:hover {
+  background-color: rgba(175, 145, 101, 0.06);
+}
+
+.yd-settings-delete {
+  width: 26px;
+  height: 26px;
+}
+
+.yd-settings-delete:hover {
+  color: #c0533c;
+  background-color: rgba(192, 83, 60, 0.08);
+}
+
+.yd-color-wrap {
+  position: relative;
+}
+
+.yd-color-button {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  box-shadow: none !important;
+}
+
+.yd-color-palette {
+  position: absolute;
+  top: 30px;
+  left: 0;
+  z-index: 50;
+  background-color: #fff;
+  border: 1px solid var(--yd-border);
+  border-radius: 4px;
+  padding: 8px;
+  display: grid;
+  grid-template-columns: repeat(7, 22px);
+  grid-template-rows: repeat(2, 22px);
+  gap: 6px;
+  box-shadow: 0 4px 12px rgba(153, 135, 108, 0.12);
+}
+
+.yd-color-swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  cursor: pointer;
+}
+
+.yd-color-swatch:hover {
+  transform: scale(1.08);
+  box-shadow: 0 0 0 2px rgba(175, 145, 101, 0.2);
+}
+
+.yd-modal-message {
+  margin: 0 0 12px;
+  color: var(--yd-text);
+  white-space: pre-wrap;
+}
+
+.yd-modal-warning {
+  color: #b35a3f;
+}
+
+.yd-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.yd-fullpage-modal .yd-modal-actions {
+  justify-content: center;
+}
+
+.yd-modal-actions-end {
+  border-top: 1px dashed var(--yd-border);
+  padding-top: 10px;
+}
+
+.yd-modal-cancel,
+.yd-modal-confirm {
+  border-radius: 4px;
+  padding: 8px 22px;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: none !important;
+  min-width: 112px;
+}
+
+.yd-modal-cancel {
+  background-color: transparent;
+  border: 1px solid var(--yd-border);
+  color: var(--yd-text-soft);
+}
+
+.yd-modal-cancel:hover {
+  border-color: var(--yd-text-soft);
+  color: var(--yd-text);
+}
+
+.yd-modal-confirm {
+  background-color: var(--yd-accent-deep);
+  color: #fff;
+  border: 1px solid var(--yd-accent-deep);
+}
+
+.yd-modal-confirm:hover {
+  background-color: var(--yd-accent);
+  border-color: var(--yd-accent);
+}
+
+.yd-modal-confirm.is-warning {
+  background-color: #c0533c;
+  border-color: #c0533c;
+  color: #fff !important;
+}
+
+/* Confirm in full-page modals (settings etc.) gets the green outlined look */
+.yd-fullpage-modal .yd-modal-confirm {
+  background-color: transparent !important;
+  color: #cecf96 !important;
+  border: 1px solid #cecf96 !important;
+  font-weight: 600;
+  min-width: 132px;
+  padding: 8px 28px;
+}
+
+.yd-fullpage-modal .yd-modal-confirm:hover {
+  background-color: rgba(206, 207, 150, 0.1) !important;
+  color: #b9bb7e !important;
+  border-color: #b9bb7e !important;
+}
+
+.yd-fullpage-modal .yd-modal-confirm.is-warning {
+  background-color: #c0533c !important;
+  color: #fff !important;
+  border-color: #c0533c !important;
+}
+
+.yd-modal-input {
+  width: 100%;
+  border: 1px solid var(--yd-border);
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 14px;
+  color: var(--yd-text);
+  background-color: transparent;
+  outline: none;
+}
+
+.yd-modal-input:focus {
+  border-color: var(--yd-accent-deep);
+}
+
+.yd-section-order-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 8px 0;
+}
+
+.yd-section-order-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background-color: var(--background-secondary, #f5f1ea);
+  cursor: grab;
+  transition: background-color 0.15s ease, opacity 0.15s ease;
+}
+
+.yd-section-order-row:hover {
+  background-color: var(--background-modifier-hover, #ece6da);
+}
+
+.yd-section-order-row.is-dragging {
+  opacity: 0.5;
+  cursor: grabbing;
+}
+
+.yd-section-order-row.is-drop-target {
+  outline: 2px dashed var(--yd-accent, #99876c);
+  outline-offset: -2px;
+}
+
+.yd-section-order-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted, #888);
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.yd-section-order-handle .svg-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.yd-section-order-label {
+  flex: 1;
+  font-size: 14px;
+  color: var(--text-normal);
+}
+
+.yd-section-order-toggle input[type="checkbox"] {
+  margin: 0;
+  cursor: pointer;
+}
+
+.yd-section-order-divider {
+  border: none;
+  border-top: 1px solid var(--background-modifier-border, #e3ddd1);
+  margin: 12px 0;
+}
+
+.yd-settings-divider {
+  border: none;
+  border-top: 1px solid var(--background-modifier-border, #e3ddd1);
+  margin: 28px 0 18px;
+}
+
+.yd-settings-tips-block {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 4px 0 12px;
+}
+
+.yd-settings-tips-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--text-muted, #888);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.yd-settings-tips-title {
+  font-weight: 700;
+  color: var(--text-normal, #333);
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+
+.yd-settings-tip-line {
+  color: var(--text-muted, #888);
+}
+
+.yd-settings-donate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 64px;
+  padding: 10px 6px;
+  border: 1px solid var(--background-modifier-border, #e3ddd1);
+  border-radius: 6px;
+  background-color: transparent;
+  text-decoration: none !important;
+  color: var(--text-normal, #333);
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.yd-settings-donate:hover {
+  background-color: rgba(232, 90, 90, 0.06);
+  border-color: #e85a5a;
+}
+
+.yd-settings-donate-heart {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #e85a5a;
+}
+
+.yd-settings-donate-heart .svg-icon {
+  width: 18px;
+  height: 18px;
+  fill: #e85a5a;
+  color: #e85a5a;
+}
+
+.yd-settings-donate-label {
+  font-size: 12px;
+  color: var(--text-normal, #333);
+}
+
+/* Hide native scrollbar styling but keep functional */
+.yd-events-list::-webkit-scrollbar,
+.yd-datalog-list::-webkit-scrollbar,
+.yd-taskbox-list::-webkit-scrollbar,
+.yd-checkin-list::-webkit-scrollbar,
+.yd-moments-list::-webkit-scrollbar,
+.yd-planner-list::-webkit-scrollbar,
+.yd-planner-section-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.yd-events-list::-webkit-scrollbar-thumb,
+.yd-datalog-list::-webkit-scrollbar-thumb,
+.yd-taskbox-list::-webkit-scrollbar-thumb,
+.yd-checkin-list::-webkit-scrollbar-thumb,
+.yd-moments-list::-webkit-scrollbar-thumb,
+.yd-planner-list::-webkit-scrollbar-thumb,
+.yd-planner-section-list::-webkit-scrollbar-thumb {
+  background-color: rgba(180, 180, 180, 0.5);
+  border-radius: 3px;
+}
+
+.yd-events-list::-webkit-scrollbar-track,
+.yd-datalog-list::-webkit-scrollbar-track,
+.yd-taskbox-list::-webkit-scrollbar-track,
+.yd-checkin-list::-webkit-scrollbar-track,
+.yd-moments-list::-webkit-scrollbar-track,
+.yd-planner-list::-webkit-scrollbar-track,
+.yd-planner-section-list::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+/* ============================================================
+   Dark mode overrides — Obsidian 在深色模式下给 body 加 .theme-dark
+   ============================================================ */
+
+.theme-dark .yd-dashboard-host,
+.theme-dark .yd-view-content {
+  background-color: #1c1b19 !important;
+}
+
+.theme-dark .yd-root {
+  --yd-accent: #c2a888;
+  --yd-accent-deep: #d4b48f;
+  --yd-accent-soft: #3a342a;
+  --yd-panel-bg: #1c1b19;
+  --yd-section-bg: #26241f;
+  --yd-section-border: rgba(255, 255, 255, 0.06);
+  --yd-card-bg: #3a342a;
+  --yd-text: #e2dccd;
+  --yd-text-soft: #a89c87;
+  --yd-text-muted: #7a7160;
+  --yd-border: rgba(255, 255, 255, 0.08);
+}
+
+/* 弹窗里的 accent 与对勾色变量 */
+.theme-dark .yd-fullpage-modal {
+  --yd-accent: #c2a888;
+  --yd-accent-deep: #d4b48f;
+  --yd-accent-soft: #3a342a;
+  --yd-text: #e2dccd;
+  --yd-text-soft: #a89c87;
+  --yd-text-muted: #7a7160;
+  --yd-border: rgba(255, 255, 255, 0.08);
+  --checkbox-color: #b09c84;
+  --checkbox-color-hover: #c2a888;
+  --checkbox-border-color: #b09c84;
+  --checkbox-border-color-hover: #c2a888;
+  --checkbox-marker-color: #1c1b19;
+}
+
+/* 复选框选中态：深色下用棕色填充 + 深色对勾 */
+.theme-dark .yd-dashboard-host input[type="checkbox"]:checked,
+.theme-dark .yd-fullpage-modal input[type="checkbox"]:checked {
+  background-color: #b09c84 !important;
+  border-color: #b09c84 !important;
+  color: #1c1b19 !important;
+}
+
+.theme-dark .yd-dashboard-host input[type="checkbox"]:checked:hover,
+.theme-dark .yd-fullpage-modal input[type="checkbox"]:checked:hover {
+  background-color: #c2a888 !important;
+  border-color: #c2a888 !important;
+}
+
+/* 行 hover 高光：浅色用白透明 0.55 在深色完全失效，改为低透明白 */
+.theme-dark .yd-event-row:hover,
+.theme-dark .yd-task-row:hover,
+.theme-dark .yd-moment-row:hover,
+.theme-dark .yd-planner-row:hover {
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+/* 输入框 / 编辑器背景 */
+.theme-dark .yd-event-editor,
+.theme-dark .yd-inline-input {
+  background-color: #2f2c26 !important;
+  color: var(--yd-text) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.theme-dark .yd-event-editor:focus {
+  box-shadow: 0 0 0 2px rgba(212, 180, 143, 0.15);
+}
+
+/* 数据记录数据值 hover */
+.theme-dark .yd-datalog-value:hover {
+  background-color: rgba(212, 180, 143, 0.08);
+}
+
+/* 历史值 hover */
+.theme-dark .yd-history-value:hover {
+  background-color: rgba(212, 180, 143, 0.08);
+}
+
+/* dashboard 内（非 modal）的月份分隔与文字色保持柔和 */
+.theme-dark .yd-planner-section-list .yd-planner-month {
+  color: var(--yd-text-muted);
+}
+
+/* 设置 / 提示分隔线 */
+.theme-dark .yd-settings-divider,
+.theme-dark .yd-modal-divider {
+  border-top-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* 调色板 popup 背景 */
+.theme-dark .yd-color-palette {
+  background-color: #2f2c26;
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* 小日历单元格悬停（如有用到 #fff hover 也兜底） */
+.theme-dark .yd-mini-cell:hover {
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+/* 数据记录数据色：浅色下用 #856b33 → 深色下用 accent 变量自动取 */
+.theme-dark .yd-datalog-value,
+.theme-dark .yd-datalog-value .yd-inline-input,
+.theme-dark .yd-history-value,
+.theme-dark .yd-history-value .yd-inline-input {
+  color: var(--yd-accent);
+}
+
+/* 部分文字色硬编码的兜底（标题灰、提示灰等） */
+.theme-dark .yd-mini-cell {
+  color: var(--yd-text-soft);
+}
+
+.theme-dark .yd-section-header .yd-empty-tip,
+.theme-dark .yd-empty-tip {
+  color: var(--yd-text-muted);
+}
+
+/* 滚动条在深色下用稍亮一点的灰 */
+.theme-dark .yd-view-content:hover::-webkit-scrollbar-thumb,
+.theme-dark .yd-section ::-webkit-scrollbar-thumb,
+.theme-dark .yd-section::-webkit-scrollbar-thumb,
+.theme-dark .yd-events-list::-webkit-scrollbar-thumb,
+.theme-dark .yd-datalog-list::-webkit-scrollbar-thumb,
+.theme-dark .yd-taskbox-list::-webkit-scrollbar-thumb,
+.theme-dark .yd-checkin-list::-webkit-scrollbar-thumb,
+.theme-dark .yd-moments-list::-webkit-scrollbar-thumb,
+.theme-dark .yd-planner-list::-webkit-scrollbar-thumb,
+.theme-dark .yd-planner-section-list::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.18);
+}
+
+.theme-dark .yd-view-content:hover {
+  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+}
+
+/* 右上角"..."等图标按钮在深色下底色 */
+.theme-dark .yd-section-icon,
+.theme-dark .yd-section-more-icon,
+.theme-dark .yd-calendar-more {
+  color: var(--yd-accent) !important;
+  background-color: transparent !important;
+}

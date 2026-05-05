@@ -1,0 +1,10 @@
+{
+  "name": "yori-dashboard",
+  "version": "0.1.0-dev",
+  "private": true,
+  "description": "Development tooling for Yori Dashboard plugin.",
+  "scripts": {
+    "build": "node scripts/bundle.js",
+    "test": "node --test tests/*.test.js"
+  }
+}

@@ -1,0 +1,9 @@
+node_modules/
+.DS_Store
+Thumbs.db
+*.log
+.idea/
+.vscode/
+.cache/
+.tmp/
+.git/COMMIT_MSG_TMP.txt
