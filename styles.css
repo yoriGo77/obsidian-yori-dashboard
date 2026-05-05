@@ -1142,21 +1142,48 @@
 
 /* ====== history ====== */
 .yd-history-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 6px;
+  column-width: 120px;
+  column-gap: 6px;
   padding: 4px;
 }
 
 .yd-history-cell {
   display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: flex-start;
   gap: 6px;
   padding: 6px 10px;
+  margin-bottom: 6px;
   border: 1px solid var(--yd-border);
   border-radius: 4px;
   background-color: transparent;
+  white-space: nowrap;
+  overflow: hidden;
+  break-inside: avoid;
+  -webkit-column-break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.yd-history-cell > .yd-history-date {
+  flex: 0 0 auto;
+}
+
+.yd-history-cell > .yd-history-value {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.yd-history-cell .yd-inline-input {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 0 4px;
+  font-size: 13px;
 }
 
 .yd-history-date {

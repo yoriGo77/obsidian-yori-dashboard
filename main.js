@@ -176,6 +176,10 @@ const I18N = {
     "common.empty": "暂无内容",
     "common.search": "搜索",
     "common.preview": "预览颜色",
+    "common.backToToday": "回到今天",
+    "common.backToWeek": "回到本周",
+    "common.backToMonth": "回到本月",
+    "common.backToYear": "回到本年",
 
     "section.calendar": "日历与每日事件",
     "section.dataLog": "数据记录",
@@ -329,6 +333,10 @@ const I18N = {
     "common.empty": "Nothing here",
     "common.search": "Search",
     "common.preview": "Preview color",
+    "common.backToToday": "Back to today",
+    "common.backToWeek": "Back to this week",
+    "common.backToMonth": "Back to this month",
+    "common.backToYear": "Back to this year",
 
     "section.calendar": "Calendar & Events",
     "section.dataLog": "Data Log",
@@ -1433,6 +1441,20 @@ function renderMiniCalendar(parent, ctx) {
       ctx.refresh();
     }
   });
+  head.oncontextmenu = (evt) => {
+    evt.preventDefault();
+    const menu = new Menu();
+    menu.addItem((item) =>
+      item.setTitle(t("common.backToToday")).onClick(() => {
+        const today = new Date();
+        ctx.state.focusDateKey = formatDateKey(today);
+        ctx.state.miniYear = today.getFullYear();
+        ctx.state.miniMonthIndex = today.getMonth();
+        ctx.refresh();
+      })
+    );
+    menu.showAtMouseEvent(evt);
+  };
 
   const labels = getWeekDayLabels(lang);
   const grid = parent.createDiv({ cls: "yd-mini-grid" });
@@ -1513,8 +1535,10 @@ function renderEventRow(parent, event, dateKey, ctx) {
 
   const text = row.createDiv({ cls: "yd-event-text", text: event.title || t("common.unnamed") });
   text.onclick = () => {
+    if (text.querySelector("textarea")) return;
     text.empty();
     const editor = text.createEl("textarea", { cls: "yd-event-editor" });
+    editor.onclick = (evt) => evt.stopPropagation();
     editor.value = event.title;
     fitTextarea(editor);
     ensureFocusInput(editor);
@@ -1653,6 +1677,18 @@ function renderWeeklyView(root, ctx, modal) {
     fallback: "⊟",
     onClick: () => archiveWeek(ctx, monday, sundayDate)
   });
+  top.oncontextmenu = (evt) => {
+    evt.preventDefault();
+    const menu = new Menu();
+    menu.addItem((item) =>
+      item.setTitle(t("common.backToWeek")).onClick(() => {
+        const todayMonday = getMondayOf(new Date());
+        ctx.state.weekAnchorKey = formatDateKey(todayMonday);
+        renderWeeklyView(root, ctx, modal);
+      })
+    );
+    menu.showAtMouseEvent(evt);
+  };
 
   const grid = root.createDiv({ cls: "yd-week-grid" });
   for (let i = 0; i < 7; i += 1) {
@@ -1759,7 +1795,7 @@ __yd_modules["lib/sections/data-log"] = function(module, exports, require) {
 "use strict";
 
 const obsidian = require("obsidian");
-const { Notice, Setting } = obsidian;
+const { Notice, Setting, Menu } = obsidian;
 const {
   formatDateKey,
   formatMonthKey,
@@ -1843,8 +1879,10 @@ function renderDataLogRow(parent, item, value, dateKey, ctx) {
   const display = value === undefined || value === "" ? "-" : value;
   valueEl.setText(display);
   valueEl.onclick = () => {
+    if (valueEl.querySelector("input")) return;
     valueEl.empty();
     const input = valueEl.createEl("input", { cls: "yd-inline-input", type: "text" });
+    input.onclick = (evt) => evt.stopPropagation();
     input.value = value || "";
     ensureFocusInput(input);
     let committed = false;
@@ -1920,6 +1958,18 @@ function renderMonthHistory(root, ctx, item, stateKey, modal) {
     fallback: "⊟",
     onClick: () => archiveMonth(ctx, item, year, monthIndex)
   });
+  top.oncontextmenu = (evt) => {
+    evt.preventDefault();
+    const menu = new Menu();
+    menu.addItem((mi) =>
+      mi.setTitle(t("common.backToMonth")).onClick(() => {
+        const now = new Date();
+        ctx.state[stateKey] = `${now.getFullYear()}-${pad2(now.getMonth() + 1)}`;
+        renderMonthHistory(root, ctx, item, stateKey, modal);
+      })
+    );
+    menu.showAtMouseEvent(evt);
+  };
 
   const grid = root.createDiv({ cls: "yd-history-grid" });
   const days = getDaysInMonth(year, monthIndex);
@@ -1933,8 +1983,10 @@ function renderMonthHistory(root, ctx, item, stateKey, modal) {
     const valueEl = cell.createSpan({ cls: "yd-history-value" });
     valueEl.setText(value === undefined || value === "" ? "-" : value);
     valueEl.onclick = () => {
+      if (valueEl.querySelector("input")) return;
       valueEl.empty();
       const input = valueEl.createEl("input", { cls: "yd-inline-input", type: "text" });
+      input.onclick = (evt) => evt.stopPropagation();
       input.value = value || "";
       ensureFocusInput(input);
       let committed = false;
@@ -2244,8 +2296,10 @@ function renderTaskRow(parent, task, ctx, options) {
   if (task.completed) row.addClass("is-done");
   const text = row.createDiv({ cls: "yd-task-text", text: task.title || ctx.t("common.unnamed") });
   text.onclick = () => {
+    if (text.querySelector("textarea")) return;
     text.empty();
     const editor = text.createEl("textarea", { cls: "yd-event-editor" });
+    editor.onclick = (evt) => evt.stopPropagation();
     editor.value = task.title;
     fitTextarea(editor);
     ensureFocusInput(editor);
@@ -2600,7 +2654,7 @@ __yd_modules["lib/sections/check-in"] = function(module, exports, require) {
 "use strict";
 
 const obsidian = require("obsidian");
-const { Notice } = obsidian;
+const { Notice, Menu } = obsidian;
 const {
   formatDateKey,
   parseMonthKey,
@@ -2746,6 +2800,18 @@ function renderCheckInMonthly(root, ctx, modal) {
       renderCheckInMonthly(root, ctx, modal);
     }
   });
+  top.oncontextmenu = (evt) => {
+    evt.preventDefault();
+    const menu = new Menu();
+    menu.addItem((mi) =>
+      mi.setTitle(t("common.backToMonth")).onClick(() => {
+        const now = new Date();
+        ctx.state.checkInMonthKey = `${now.getFullYear()}-${pad2(now.getMonth() + 1)}`;
+        renderCheckInMonthly(root, ctx, modal);
+      })
+    );
+    menu.showAtMouseEvent(evt);
+  };
 
   const allItems = getAllItems(settings);
   const monthItems = allItems.filter((item) => {
@@ -3390,7 +3456,9 @@ function renderMonthlyPlannerSection(parent, ctx) {
 
   if (currentGroupEl) {
     requestAnimationFrame(() => {
-      list.scrollTop = currentGroupEl.offsetTop;
+      const listRect = list.getBoundingClientRect();
+      const groupRect = currentGroupEl.getBoundingClientRect();
+      list.scrollTop = list.scrollTop + (groupRect.top - listRect.top);
     });
   }
 
@@ -3425,8 +3493,10 @@ function renderEntryRow(parent, entry, monthKey, ctx) {
   row.createSpan({ cls: "yd-planner-bullet", text: "·" });
   const text = row.createDiv({ cls: "yd-planner-text", text: entry.title || t("common.unnamed") });
   text.onclick = () => {
+    if (text.querySelector("textarea")) return;
     text.empty();
     const editor = text.createEl("textarea", { cls: "yd-event-editor" });
+    editor.onclick = (evt) => evt.stopPropagation();
     editor.value = entry.title;
     fitTextarea(editor);
     ensureFocusInput(editor);
@@ -3608,6 +3678,17 @@ function renderYearlyView(root, ctx, modal) {
     fallback: "⊟",
     onClick: () => archiveYear(ctx, year, () => renderYearlyView(root, ctx, modal))
   });
+  top.oncontextmenu = (evt) => {
+    evt.preventDefault();
+    const menu = new Menu();
+    menu.addItem((mi) =>
+      mi.setTitle(t("common.backToYear")).onClick(() => {
+        ctx.state.plannerYear = new Date().getFullYear();
+        renderYearlyView(root, ctx, modal);
+      })
+    );
+    menu.showAtMouseEvent(evt);
+  };
 
   const grid = root.createDiv({ cls: "yd-planner-grid" });
   const modalCtx = Object.assign({}, ctx, {
