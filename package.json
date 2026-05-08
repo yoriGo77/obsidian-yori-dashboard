@@ -1,6 +1,6 @@
 {
   "name": "yori-dashboard",
-  "version": "0.1.2-dev",
+  "version": "1.0.0",
   "private": true,
   "description": "Development tooling for Yori Dashboard plugin.",
   "scripts": {

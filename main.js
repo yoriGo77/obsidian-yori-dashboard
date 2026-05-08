@@ -63,12 +63,12 @@ const SECTION_LIMITS = {
     checkIn: 5
   },
   long: {
-    dailyEvents: 10,
-    taskBox: 10,
-    dailyMoments: 8,
-    monthlyPlanner: 10,
-    dataLog: 10,
-    checkIn: 10
+    dailyEvents: 12,
+    taskBox: 12,
+    dailyMoments: 12,
+    monthlyPlanner: 12,
+    dataLog: 12,
+    checkIn: 12
   }
 };
 
@@ -176,10 +176,19 @@ const I18N = {
     "common.empty": "暂无内容",
     "common.search": "搜索",
     "common.preview": "预览颜色",
+    "mobile.tabToday": "日常",
+    "mobile.tabTrackers": "打卡",
+    "mobile.tabTasks": "任务",
+    "mobile.tabLinks": "链接",
+    "mobile.search": "搜索笔记",
+    "mobile.searchPlaceholder": "正文、标题或 #标签",
+    "mobile.noResults": "没有匹配的笔记",
+    "mobile.tabEmpty": "此页暂无对应内容（可在设置中开启相关区块）",
     "common.backToToday": "回到今天",
     "common.backToWeek": "回到本周",
     "common.backToMonth": "回到本月",
     "common.backToYear": "回到本年",
+    "common.sectionAdd": "+Add",
 
     "section.calendar": "日历与每日事件",
     "section.dataLog": "数据记录",
@@ -279,13 +288,10 @@ const I18N = {
 
     "settings.heading": "Yori Dashboard 设置",
     "settings.tipsTitle": "Tips",
-    "settings.tipMobile": "暂不支持移动端",
+    "settings.tipsLines": "支持移动端和桌面端\n桌面端，输入事件/任务时，可shift+回车换行\n移动端，每月计划在任务页面内（如果开启了每月计划）\n移动端，小日历切换日期，将同时切换打卡页面的数据\n桌面端右键日期标题可回到当前，移动端长按日期标题回到当前",
     "settings.tipDonate": "https://yorigo77.github.io",
     "settings.donateUrl": "https://yorigo77.github.io",
     "settings.donate": "打赏",
-    "settings.tip.taskShift": "添加任务时，Shift+Enter 可换行",
-    "settings.tip.dragNote": "拖拽笔记到任务列即可创建链接任务",
-    "settings.tip.weekJump": "在 Week Plan 中右键周范围可跳回本周",
     "settings.general": "常规设置",
     "settings.language": "界面语言",
     "settings.languageDesc": "标题、按钮、说明等语言",
@@ -333,10 +339,19 @@ const I18N = {
     "common.empty": "Nothing here",
     "common.search": "Search",
     "common.preview": "Preview color",
+    "mobile.tabToday": "Daily",
+    "mobile.tabTrackers": "Trackers",
+    "mobile.tabTasks": "Tasks",
+    "mobile.tabLinks": "Links",
+    "mobile.search": "Search notes",
+    "mobile.searchPlaceholder": "Content, title, or #tag",
+    "mobile.noResults": "No matching notes",
+    "mobile.tabEmpty": "Nothing here yet (enable sections in settings)",
     "common.backToToday": "Back to today",
     "common.backToWeek": "Back to this week",
     "common.backToMonth": "Back to this month",
     "common.backToYear": "Back to this year",
+    "common.sectionAdd": "+Add",
 
     "section.calendar": "Calendar & Events",
     "section.dataLog": "Data Log",
@@ -436,13 +451,10 @@ const I18N = {
 
     "settings.heading": "Yori Dashboard Settings",
     "settings.tipsTitle": "Tips",
-    "settings.tipMobile": "Mobile is not supported yet",
+    "settings.tipsLines": "Works on mobile and desktop.\nDesktop: when entering an event or task, Shift+Enter inserts a new line.\nMobile: monthly planner appears on the Tasks tab when monthly planner is enabled.\nMobile: changing the date in the mini calendar also updates data on the Trackers tab.\nDesktop: right-click the date header to return to today; mobile: long-press the date header.",
     "settings.tipDonate": "https://yorigo77.github.io",
     "settings.donateUrl": "https://yorigo77.github.io",
     "settings.donate": "Donate",
-    "settings.tip.taskShift": "When adding a task, Shift+Enter inserts a new line.",
-    "settings.tip.dragNote": "Drag a note into a task column to create a linked task.",
-    "settings.tip.weekJump": "In Week Plan, right-click the week range to jump back to this week.",
     "settings.general": "General",
     "settings.language": "Interface language",
     "settings.languageDesc": "Language for headings, buttons and descriptions",
@@ -934,7 +946,7 @@ __yd_modules["lib/ui-modals"] = function(module, exports, require) {
 "use strict";
 
 const obsidian = require("obsidian");
-const { Modal, FuzzySuggestModal, TFile } = obsidian;
+const { Modal, FuzzySuggestModal, TFile, Platform } = obsidian;
 
 class ConfirmModal extends Modal {
   constructor(app, options) {
@@ -1055,6 +1067,7 @@ class FullPageModal extends Modal {
   onOpen() {
     const opts = this.options;
     this.modalEl?.addClass("yd-fullpage-modal");
+    if (Platform?.isMobile) this.modalEl?.addClass("yd-fullpage-modal--mobile");
     if (opts.titleClass) this.modalEl?.addClass(opts.titleClass);
     const { contentEl, titleEl } = this;
     titleEl.setText(opts.title || "");
@@ -1065,6 +1078,7 @@ class FullPageModal extends Modal {
     }
   }
   onClose() {
+    this.modalEl?.removeClass("yd-fullpage-modal--mobile");
     this.contentEl.empty();
     if (typeof this.options.onClose === "function") this.options.onClose();
   }
@@ -1160,6 +1174,149 @@ module.exports = {
   emptyEl,
   createIconButton,
   attachOutsideClose
+};
+
+};
+
+__yd_modules["lib/mobile-composer-scroll"] = function(module, exports, require) {
+"use strict";
+
+const { Platform } = require("obsidian");
+
+const MOBILE_PANEL_KB_CLASS = "yd-mobile-panel--keyboard-composer";
+const FULLPAGE_KB_CLASS = "yd-fullpage-content--keyboard-composer";
+
+function findScrollableAncestor(start) {
+  let n = start && start.parentElement;
+  while (n && n !== document.documentElement) {
+    const st = window.getComputedStyle(n);
+    if (
+      /(auto|scroll|overlay)/.test(st.overflowY) &&
+      n.scrollHeight > n.clientHeight + 4
+    ) {
+      return n;
+    }
+    n = n.parentElement;
+  }
+  return null;
+}
+
+/**
+ * Mobile only: reserve scroll room + keep composer above software keyboard.
+ * Single-pass alignment (no scroll-into-max + second nudge).
+ * @param {HTMLElement} wrap Composer root
+ * @param {HTMLElement[]} focusEls Elements that may receive focus (textarea, inputs, select)
+ * @returns {() => void} cleanup
+ */
+function attachMobilePanelKeyboardScroll(wrap, focusEls) {
+  if (!Platform?.isMobile || typeof window === "undefined" || !wrap) {
+    return () => {};
+  }
+  const panel = wrap.closest(".yd-mobile-panel");
+  const fullpage = wrap.closest(".yd-fullpage-content");
+  const scrollEl =
+    panel ||
+    fullpage ||
+    findScrollableAncestor(wrap) ||
+    wrap.closest(".modal");
+
+  if (!scrollEl) return () => {};
+
+  if (panel) panel.classList.add(MOBILE_PANEL_KB_CLASS);
+  else if (fullpage) fullpage.classList.add(FULLPAGE_KB_CLASS);
+
+  const els = (focusEls || []).filter((e) => e && typeof e.getBoundingClientRect === "function");
+
+  let vvDebounce = null;
+  const align = () => {
+    if (!wrap.isConnected) return;
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const viewBottom = vv.offsetTop + vv.height;
+    const pad = 18;
+    let bottom = wrap.getBoundingClientRect().bottom;
+    for (const el of els) {
+      bottom = Math.max(bottom, el.getBoundingClientRect().bottom);
+    }
+    if (bottom <= viewBottom - pad) return;
+    scrollEl.scrollTop += bottom - viewBottom + pad;
+  };
+
+  const onVv = () => {
+    if (vvDebounce) clearTimeout(vvDebounce);
+    vvDebounce = setTimeout(() => {
+      vvDebounce = null;
+      requestAnimationFrame(align);
+    }, 100);
+  };
+
+  const onFocus = () => {
+    requestAnimationFrame(align);
+    setTimeout(align, 320);
+  };
+
+  const vv = window.visualViewport;
+  if (vv) {
+    vv.addEventListener("resize", onVv);
+    vv.addEventListener("scroll", onVv);
+  }
+  for (const el of els) {
+    el.addEventListener("focus", onFocus);
+  }
+  requestAnimationFrame(align);
+  setTimeout(align, 280);
+
+  return () => {
+    if (vv) {
+      vv.removeEventListener("resize", onVv);
+      vv.removeEventListener("scroll", onVv);
+    }
+    if (vvDebounce) clearTimeout(vvDebounce);
+    for (const el of els) {
+      el.removeEventListener("focus", onFocus);
+    }
+    if (panel) panel.classList.remove(MOBILE_PANEL_KB_CLASS);
+    else if (fullpage) fullpage.classList.remove(FULLPAGE_KB_CLASS);
+  };
+}
+
+/**
+ * Full-page modal: delegated focusin on inputs so re-rendered settings rows still get keyboard scroll.
+ * Stores cleanup on `modal._ydFullpageInputKbCleanup` (replaces previous).
+ */
+function attachMobileFullpageDelegatedInputScroll(contentRoot, modal, selector) {
+  if (!Platform?.isMobile || typeof window === "undefined" || !contentRoot || !modal) {
+    return () => {};
+  }
+  const sel = selector || ".yd-settings-input";
+  let scrollDispose = () => {};
+  const onFocusIn = (e) => {
+    const t = e.target;
+    if (!(t instanceof Element) || !contentRoot.contains(t) || !t.matches(sel)) return;
+    scrollDispose();
+    const wrap =
+      t.closest(".yd-quick-settings-row") ||
+      t.closest(".yd-settings-row") ||
+      contentRoot;
+    scrollDispose = attachMobilePanelKeyboardScroll(wrap, [t]);
+  };
+  contentRoot.addEventListener("focusin", onFocusIn);
+  const cleanup = () => {
+    contentRoot.removeEventListener("focusin", onFocusIn);
+    scrollDispose();
+    scrollDispose = () => {};
+  };
+  const prev = modal._ydFullpageInputKbCleanup;
+  if (typeof prev === "function") prev();
+  modal._ydFullpageInputKbCleanup = cleanup;
+  return cleanup;
+}
+
+module.exports = {
+  attachMobilePanelKeyboardScroll,
+  attachMobileFullpageDelegatedInputScroll,
+  MOBILE_PANEL_KB_CLASS,
+  FULLPAGE_KB_CLASS
 };
 
 };
@@ -1285,7 +1442,7 @@ __yd_modules["lib/sections/calendar"] = function(module, exports, require) {
 "use strict";
 
 const obsidian = require("obsidian");
-const { Notice, Menu } = obsidian;
+const { Notice, Menu, Platform } = obsidian;
 const {
   formatDateKey,
   parseDateKey,
@@ -1297,6 +1454,7 @@ const {
 const { makeId } = __yd_require("lib/store");
 const { ConfirmModal, FullPageModal } = __yd_require("lib/ui-modals");
 const { fitTextarea, ensureFocusInput, createIconButton } = __yd_require("lib/dom-utils");
+const { attachMobilePanelKeyboardScroll } = __yd_require("lib/mobile-composer-scroll");
 const { createArchiveNote, buildArchiveBody } = __yd_require("lib/archive");
 
 const WEEK_LABELS_ZH = ["一", "二", "三", "四", "五", "六", "日"];
@@ -1389,20 +1547,38 @@ function pasteEvent(settings, dateKey, clipboard) {
   return createEvent(settings, dateKey, clipboard.title);
 }
 
-function renderCalendarSection(parent, ctx) {
+function renderCalendarSection(parent, ctx, opts) {
   const { t } = ctx;
-  const wrap = parent.createDiv({ cls: "yd-section yd-section-calendar" });
-  const body = wrap.createDiv({ cls: "yd-calendar-body" });
-  const calCol = body.createDiv({ cls: "yd-calendar-mini" });
-  const eventsCol = body.createDiv({ cls: "yd-calendar-events" });
-  renderMiniCalendar(calCol, ctx);
-  renderDayEvents(eventsCol, ctx);
-  createIconButton(wrap, "more-horizontal", {
-    cls: "yd-section-more-icon yd-calendar-more",
-    label: t("common.more"),
-    fallback: "···",
-    onClick: () => openWeeklyModal(ctx)
+  const options = opts || {};
+  const isMobileCard = options.layout === "mobileCard";
+  const wrap = parent.createDiv({
+    cls: isMobileCard
+      ? "yd-section yd-section-calendar yd-calendar-mobile-card"
+      : "yd-section yd-section-calendar"
   });
+  const body = wrap.createDiv({
+    cls: isMobileCard
+      ? "yd-calendar-body yd-calendar-body--mobile-stack"
+      : "yd-calendar-body"
+  });
+  const calCol = body.createDiv({ cls: "yd-calendar-mini" });
+  renderMiniCalendar(calCol, ctx);
+  if (isMobileCard) {
+    body.createDiv({ cls: "yd-calendar-mobile-divider" });
+  }
+  const eventsCol = body.createDiv({ cls: "yd-calendar-events" });
+  renderDayEvents(eventsCol, ctx, {
+    hideUndoneCount: isMobileCard,
+    mobileFooter: isMobileCard
+  });
+  if (!isMobileCard) {
+    createIconButton(wrap, "more-horizontal", {
+      cls: "yd-section-more-icon yd-calendar-more",
+      label: t("common.more"),
+      fallback: "···",
+      onClick: () => openWeeklyModal(ctx)
+    });
+  }
 }
 
 function renderMiniCalendar(parent, ctx) {
@@ -1475,7 +1651,8 @@ function renderMiniCalendar(parent, ctx) {
   });
 }
 
-function renderDayEvents(parent, ctx) {
+function renderDayEvents(parent, ctx, eventOpts) {
+  const opts = eventOpts || {};
   const { settings, t } = ctx;
   parent.empty();
   const lang = settings.uiLanguage || "zh";
@@ -1488,32 +1665,56 @@ function renderDayEvents(parent, ctx) {
   const head = parent.createDiv({ cls: "yd-events-head" });
   head.createDiv({
     cls: "yd-events-date",
-    text: `${getDayHeader(date, lang)} ${countText}`
+    text: opts.hideUndoneCount ? getDayHeader(date, lang) : `${getDayHeader(date, lang)} ${countText}`
   });
 
   const list = parent.createDiv({ cls: "yd-events-list" });
-  const limit = ctx.getLimit("dailyEvents");
-  list.style.maxHeight = `${limit * 30 + 4}px`;
+  if (opts.mobileFooter) {
+    list.addClass("yd-events-list--mobile");
+    list.style.maxHeight = "";
+  } else {
+    const limit = ctx.getLimit("dailyEvents");
+    list.style.maxHeight = `${limit * 30 + 4}px`;
+  }
   events.forEach((event) => {
     renderEventRow(list, event, dateKey, ctx);
   });
 
-  const addBtn = parent.createEl("button", {
-    cls: "yd-add-button",
-    text: t("calendar.addEvent")
-  });
-  addBtn.onclick = () => {
-    addBtn.style.display = "none";
-    renderInlineEditor(parent, "", async (value) => {
-      addBtn.style.display = "";
-      if (!value) return;
-      createEvent(settings, dateKey, value);
-      await ctx.save();
-      ctx.refresh();
-    }, () => {
-      addBtn.style.display = "";
-    });
+  const wireAddBtn = (addBtn) => {
+    addBtn.onclick = () => {
+      addBtn.style.display = "none";
+      renderInlineEditor(parent, "", async (value) => {
+        addBtn.style.display = "";
+        if (!value) return;
+        createEvent(settings, dateKey, value);
+        await ctx.save();
+        ctx.refresh();
+      }, () => {
+        addBtn.style.display = "";
+      });
+    };
   };
+
+  if (opts.mobileFooter) {
+    const footer = parent.createDiv({ cls: "yd-calendar-mobile-events-footer" });
+    const addBtn = footer.createEl("button", {
+      cls: "yd-add-button",
+      text: t("calendar.addEvent")
+    });
+    wireAddBtn(addBtn);
+    createIconButton(footer, "more-horizontal", {
+      cls: "yd-section-more-icon yd-calendar-more-mobile",
+      label: t("common.more"),
+      fallback: "···",
+      onClick: () => openWeeklyModal(ctx)
+    });
+  } else {
+    const addBtn = parent.createEl("button", {
+      cls: "yd-add-button",
+      text: t("calendar.addEvent")
+    });
+    wireAddBtn(addBtn);
+  }
 }
 
 function renderEventRow(parent, event, dateKey, ctx) {
@@ -1576,10 +1777,12 @@ function renderInlineEditor(parent, initial, onCommit, onCancel) {
   editor.value = initial || "";
   fitTextarea(editor);
   ensureFocusInput(editor);
+  const keyboardDispose = attachMobilePanelKeyboardScroll(wrap, [editor]);
   let committed = false;
   const finish = async (value) => {
     if (committed) return;
     committed = true;
+    keyboardDispose();
     wrap.remove();
     await onCommit(value);
   };
@@ -1590,6 +1793,7 @@ function renderInlineEditor(parent, initial, onCommit, onCancel) {
     } else if (e.key === "Escape") {
       e.preventDefault();
       committed = true;
+      keyboardDispose();
       wrap.remove();
       if (typeof onCancel === "function") onCancel();
     }
@@ -1638,10 +1842,12 @@ function renderWeeklyView(root, ctx, modal) {
   const focus = parseDateKey(ctx.state.weekAnchorKey) || parseDateKey(ctx.state.focusDateKey) || new Date();
   const monday = getMondayOf(focus);
   ctx.state.weekAnchorKey = formatDateKey(monday);
+  const sundayDate = new Date(monday);
+  sundayDate.setDate(monday.getDate() + 6);
 
-  const top = root.createDiv({ cls: "yd-week-top" });
-  const nav = top.createDiv({ cls: "yd-week-nav" });
-  createIconButton(nav, "chevron-left", {
+  const top = root.createDiv({ cls: "yd-week-top yd-week-top--bar" });
+  const bar = top.createDiv({ cls: "yd-week-bar" });
+  createIconButton(bar, "chevron-left", {
     cls: "yd-mini-arrow",
     fallback: "‹",
     onClick: () => {
@@ -1651,13 +1857,11 @@ function renderWeeklyView(root, ctx, modal) {
       renderWeeklyView(root, ctx, modal);
     }
   });
-  const sundayDate = new Date(monday);
-  sundayDate.setDate(monday.getDate() + 6);
-  nav.createDiv({
-    cls: "yd-week-range",
-    text: `${formatDateKey(monday)} - ${formatDateKey(sundayDate)}`
-  });
-  createIconButton(nav, "chevron-right", {
+  const rangeEl = bar.createDiv({ cls: "yd-week-range-stack" });
+  rangeEl.createDiv({ cls: "yd-week-range-line", text: formatDateKey(monday) });
+  rangeEl.createDiv({ cls: "yd-week-range-pipe" });
+  rangeEl.createDiv({ cls: "yd-week-range-line", text: formatDateKey(sundayDate) });
+  createIconButton(bar, "chevron-right", {
     cls: "yd-mini-arrow",
     fallback: "›",
     onClick: () => {
@@ -1668,7 +1872,7 @@ function renderWeeklyView(root, ctx, modal) {
     }
   });
   createIconButton(top, "archive", {
-    cls: "yd-section-more-icon",
+    cls: "yd-section-more-icon yd-week-archive-inline",
     label: t("calendar.weekArchive"),
     fallback: "⊟",
     onClick: () => archiveWeek(ctx, monday, sundayDate)
@@ -1687,12 +1891,17 @@ function renderWeeklyView(root, ctx, modal) {
   };
 
   const grid = root.createDiv({ cls: "yd-week-grid" });
+  const isMobileWeek = !!Platform?.isMobile;
   for (let i = 0; i < 7; i += 1) {
     const day = new Date(monday);
     day.setDate(monday.getDate() + i);
     const dateKey = formatDateKey(day);
     const col = grid.createDiv({ cls: "yd-week-col" });
-    const head = col.createDiv({ cls: "yd-week-col-head" });
+    const head = col.createDiv({
+      cls: isMobileWeek
+        ? "yd-week-col-head yd-week-col-head--with-actions"
+        : "yd-week-col-head"
+    });
     const dayLabel = head.createDiv({ cls: "yd-week-col-day" });
     dayLabel.setText(getDayHeader(day, lang));
     dayLabel.onclick = () => {
@@ -1702,6 +1911,20 @@ function renderWeeklyView(root, ctx, modal) {
       modal.close();
       ctx.refresh();
     };
+    if (isMobileWeek) {
+      const headAdd = head.createEl("button", {
+        cls: "yd-add-button yd-week-col-head-add",
+        text: t("common.sectionAdd")
+      });
+      headAdd.onclick = () => {
+        renderInlineEditor(col, "", async (value) => {
+          if (!value) return;
+          createEvent(ctx.settings, dateKey, value);
+          await ctx.save();
+          renderWeeklyView(root, ctx, modal);
+        });
+      };
+    }
     const list = col.createDiv({ cls: "yd-week-list" });
     const events = getEventList(ctx.settings, dateKey);
     const modalCtx = Object.assign({}, ctx, {
@@ -1713,19 +1936,21 @@ function renderWeeklyView(root, ctx, modal) {
     events.forEach((event) => {
       renderEventRow(list, event, dateKey, modalCtx);
     });
-    const addBtn = col.createEl("button", { cls: "yd-add-button", text: t("calendar.weekAddEvent") });
-    addBtn.onclick = () => {
-      addBtn.style.display = "none";
-      renderInlineEditor(col, "", async (value) => {
-        addBtn.style.display = "";
-        if (!value) return;
-        createEvent(ctx.settings, dateKey, value);
-        await ctx.save();
-        renderWeeklyView(root, ctx, modal);
-      }, () => {
-        addBtn.style.display = "";
-      });
-    };
+    if (!isMobileWeek) {
+      const addBtn = col.createEl("button", { cls: "yd-add-button", text: t("calendar.weekAddEvent") });
+      addBtn.onclick = () => {
+        addBtn.style.display = "none";
+        renderInlineEditor(col, "", async (value) => {
+          addBtn.style.display = "";
+          if (!value) return;
+          createEvent(ctx.settings, dateKey, value);
+          await ctx.save();
+          renderWeeklyView(root, ctx, modal);
+        }, () => {
+          addBtn.style.display = "";
+        });
+      };
+    }
   }
 }
 
@@ -2161,10 +2386,11 @@ __yd_modules["lib/sections/task-box"] = function(module, exports, require) {
 "use strict";
 
 const obsidian = require("obsidian");
-const { Notice, Menu } = obsidian;
+const { Notice, Menu, Platform } = obsidian;
 const { makeId } = __yd_require("lib/store");
 const { ConfirmModal, FullPageModal } = __yd_require("lib/ui-modals");
 const { fitTextarea, ensureFocusInput, createIconButton } = __yd_require("lib/dom-utils");
+const { attachMobilePanelKeyboardScroll } = __yd_require("lib/mobile-composer-scroll");
 
 function getBoxes(settings) {
   const list = settings?.data?.taskBox?.boxes || [];
@@ -2440,28 +2666,43 @@ function renderFullTaskBox(root, ctx, modal) {
   const { settings, t } = ctx;
   const boxes = getBoxes(settings);
   const grid = root.createDiv({ cls: "yd-taskbox-fullgrid" });
+  const isMobileTb = !!Platform?.isMobile;
   boxes.forEach((box) => {
     const col = grid.createDiv({ cls: "yd-taskbox-fullcol" });
-    col.createDiv({ cls: "yd-taskbox-name", text: box.name || t("common.unnamed") });
+    let addBtn;
+    if (isMobileTb) {
+      const titleRow = col.createDiv({ cls: "yd-taskbox-fullhead" });
+      titleRow.createDiv({ cls: "yd-taskbox-name", text: box.name || t("common.unnamed") });
+      addBtn = titleRow.createEl("button", {
+        cls: "yd-add-button yd-taskbox-head-add",
+        text: t("common.sectionAdd")
+      });
+    } else {
+      col.createDiv({ cls: "yd-taskbox-name", text: box.name || t("common.unnamed") });
+    }
     const list = col.createDiv({ cls: "yd-taskbox-fulllist" });
     getTasksForBox(settings, box.id).forEach((task) => {
       renderTaskRow(list, task, ctx, { onChange: () => renderFullTaskBox(root, ctx, modal) });
     });
-    const addBtn = col.createEl("button", { cls: "yd-add-button", text: t("taskBox.addTask") });
+    if (!isMobileTb) {
+      addBtn = col.createEl("button", { cls: "yd-add-button", text: t("taskBox.addTask") });
+    }
     addBtn.onclick = () => {
-      addBtn.style.display = "none";
+      if (!isMobileTb) addBtn.style.display = "none";
       const wrap = col.createDiv({ cls: "yd-task-composer" });
       const editor = wrap.createEl("textarea", { cls: "yd-event-editor" });
       editor.placeholder = t("taskBox.placeholderTask");
       ensureFocusInput(editor);
       fitTextarea(editor);
+      const keyboardDispose = attachMobilePanelKeyboardScroll(wrap, [editor]);
       let committed = false;
       const finish = async () => {
         if (committed) return;
         committed = true;
+        keyboardDispose();
         const value = editor.value.trim();
         wrap.remove();
-        addBtn.style.display = "";
+        if (!isMobileTb) addBtn.style.display = "";
         if (!value) return;
         createTask(settings, box.id, value);
         await ctx.save();
@@ -2474,8 +2715,9 @@ function renderFullTaskBox(root, ctx, modal) {
         } else if (e.key === "Escape") {
           e.preventDefault();
           committed = true;
+          keyboardDispose();
           wrap.remove();
-          addBtn.style.display = "";
+          if (!isMobileTb) addBtn.style.display = "";
         }
       };
       editor.oninput = () => fitTextarea(editor);
@@ -2660,7 +2902,7 @@ __yd_modules["lib/sections/check-in"] = function(module, exports, require) {
 "use strict";
 
 const obsidian = require("obsidian");
-const { Notice, Menu } = obsidian;
+const { Notice, Menu, setIcon } = obsidian;
 const {
   formatDateKey,
   parseMonthKey,
@@ -2741,24 +2983,36 @@ function renderCheckInSection(parent, ctx) {
   });
 }
 
-function renderCheckInRow(parent, item, dateKey, ctx) {
-  const checked = isChecked(ctx.settings, item.id, dateKey);
-  const row = parent.createDiv({ cls: "yd-checkin-row" });
-  const btn = row.createEl("button", { cls: "yd-checkin-btn", text: ctx.t("checkIn.button") });
+function setCheckInRowButtonState(btn, item, checked, t) {
+  btn.style.backgroundColor = "";
+  btn.style.color = "";
+  btn.empty();
   if (checked) {
     btn.addClass("is-done");
     btn.style.backgroundColor = item.color;
     btn.style.borderColor = item.color;
-    btn.setText("√");
+    setIcon(btn, "check");
+    btn.style.color = "#ffffff";
   } else {
+    btn.removeClass("is-done");
+    btn.setText(t("checkIn.button"));
     btn.style.borderColor = withAlpha(item.color, 0.5);
   }
+}
+
+function renderCheckInRow(parent, item, dateKey, ctx) {
+  const { t } = ctx;
+  const checked = isChecked(ctx.settings, item.id, dateKey);
+  const row = parent.createDiv({ cls: "yd-checkin-row" });
+  const btn = row.createEl("button", { cls: "yd-checkin-btn", type: "button" });
+  setCheckInRowButtonState(btn, item, checked, t);
   btn.onclick = async () => {
-    setChecked(ctx.settings, item.id, dateKey, !checked);
+    const next = !isChecked(ctx.settings, item.id, dateKey);
+    setChecked(ctx.settings, item.id, dateKey, next);
     await ctx.save();
-    ctx.refresh();
+    setCheckInRowButtonState(btn, item, next, t);
   };
-  row.createSpan({ cls: "yd-checkin-name", text: item.name || ctx.t("common.unnamed") });
+  row.createSpan({ cls: "yd-checkin-name", text: item.name || t("common.unnamed") });
 }
 
 function openCheckInMonthly(ctx) {
@@ -3031,6 +3285,7 @@ const { Notice, normalizePath, Menu } = obsidian;
 const { formatDateKey, formatTimeDisplay, nowTimeParts, pad2 } = __yd_require("lib/date-utils");
 const { makeId } = __yd_require("lib/store");
 const { fitTextarea, ensureFocusInput, createIconButton } = __yd_require("lib/dom-utils");
+const { attachMobilePanelKeyboardScroll } = __yd_require("lib/mobile-composer-scroll");
 const { ConfirmModal } = __yd_require("lib/ui-modals");
 const { ensureFolder } = __yd_require("lib/archive");
 
@@ -3079,26 +3334,39 @@ function deleteMoment(settings, dateKey, momentId) {
   setMoments(settings, dateKey, list);
 }
 
-function renderDailyMomentsSection(parent, ctx) {
+function renderDailyMomentsSection(parent, ctx, opts) {
+  const options = opts || {};
+  const isMobileCard = options.layout === "mobileCard";
   const { settings, t } = ctx;
   if (settings.showSection?.dailyMoments === false) return;
   const lang = settings.uiLanguage || "zh";
-  const wrap = parent.createDiv({ cls: "yd-section yd-section-moments" });
-  const header = wrap.createDiv({ cls: "yd-section-header yd-section-header-center" });
+  const wrap = parent.createDiv({
+    cls: isMobileCard
+      ? "yd-section yd-section-moments yd-moments-mobile-card"
+      : "yd-section yd-section-moments"
+  });
+  const header = wrap.createDiv({
+    cls: isMobileCard
+      ? "yd-section-header yd-section-header-center yd-section-header--moments-mobile"
+      : "yd-section-header yd-section-header-center"
+  });
   const dateKey = ctx.state.focusDateKey || formatDateKey(new Date());
   const moments = getMoments(settings, dateKey);
   const countText = lang === "zh" ? `（${moments.length}）` : `(${moments.length})`;
   header.createSpan({
     cls: "yd-section-title",
-    text: `${t("section.dailyMoments")} ${countText}`
+    text: isMobileCard ? t("section.dailyMoments") : `${t("section.dailyMoments")} ${countText}`
   });
+
+  let addBtn = null;
   const triggerCompose = () => {
-    addBtn.style.display = "none";
+    if (addBtn) addBtn.style.display = "none";
     renderMomentComposer(wrap, dateKey, null, ctx, () => {
-      addBtn.style.display = "";
+      if (addBtn) addBtn.style.display = "";
       ctx.refresh();
     });
   };
+
   createIconButton(header, "notebook-pen", {
     cls: "yd-section-icon yd-diary-btn",
     label: t("dailyMoments.diary"),
@@ -3107,8 +3375,13 @@ function renderDailyMomentsSection(parent, ctx) {
   });
 
   const list = wrap.createDiv({ cls: "yd-moments-list" });
-  const limit = ctx.getLimit("dailyMoments");
-  list.style.maxHeight = `${limit * 32 + 4}px`;
+  if (isMobileCard) {
+    list.addClass("yd-moments-list--mobile");
+    list.style.maxHeight = "";
+  } else {
+    const limit = ctx.getLimit("dailyMoments");
+    list.style.maxHeight = `${limit * 32 + 4}px`;
+  }
   moments.forEach((moment) => renderMomentRow(list, moment, dateKey, ctx));
   if (moments.length === 0) {
     list.createDiv({ cls: "yd-empty-tip", text: t("common.empty") });
@@ -3118,7 +3391,10 @@ function renderDailyMomentsSection(parent, ctx) {
     });
   }
 
-  const addBtn = wrap.createEl("button", { cls: "yd-add-button", text: t("dailyMoments.note") });
+  addBtn = wrap.createEl("button", {
+    cls: isMobileCard ? "yd-add-button yd-moment-add-mobile" : "yd-add-button",
+    text: t("dailyMoments.note")
+  });
   addBtn.onclick = triggerCompose;
 }
 
@@ -3165,6 +3441,20 @@ function renderMomentRow(parent, moment, dateKey, ctx) {
   };
 }
 
+function is12HourTimeFormat(settings) {
+  return String(settings?.timeFormat ?? "24") === "12";
+}
+
+function selectNumericInputOnFocus(input) {
+  input.addEventListener("focus", () => {
+    requestAnimationFrame(() => {
+      try {
+        input.select();
+      } catch (_e) {}
+    });
+  });
+}
+
 function renderMomentComposer(parent, dateKey, existing, ctx, done, replaceTarget) {
   const { settings, t } = ctx;
   const wrap = document.createElement("div");
@@ -3182,7 +3472,7 @@ function renderMomentComposer(parent, dateKey, existing, ctx, done, replaceTarge
   const hourInput = document.createElement("input");
   hourInput.type = "number";
   hourInput.min = "0";
-  hourInput.max = settings.timeFormat === "12" ? "12" : "23";
+  hourInput.max = is12HourTimeFormat(settings) ? "12" : "23";
   hourInput.className = "yd-time-input";
   const minuteInput = document.createElement("input");
   minuteInput.type = "number";
@@ -3192,7 +3482,7 @@ function renderMomentComposer(parent, dateKey, existing, ctx, done, replaceTarge
 
   let displayHours = initial.hours ?? 0;
   let isPm = displayHours >= 12;
-  if (settings.timeFormat === "12") {
+  if (is12HourTimeFormat(settings)) {
     let h12 = displayHours % 12;
     if (h12 === 0) h12 = 12;
     hourInput.value = `${pad2(h12)}`;
@@ -3200,6 +3490,8 @@ function renderMomentComposer(parent, dateKey, existing, ctx, done, replaceTarge
     hourInput.value = `${pad2(initial.hours ?? 0)}`;
   }
   minuteInput.value = `${pad2(initial.minutes ?? 0)}`;
+  selectNumericInputOnFocus(hourInput);
+  selectNumericInputOnFocus(minuteInput);
 
   timeWrap.appendChild(hourInput);
   const colon = document.createElement("span");
@@ -3210,7 +3502,7 @@ function renderMomentComposer(parent, dateKey, existing, ctx, done, replaceTarge
 
   let amBtn = null;
   let pmBtn = null;
-  if (settings.timeFormat === "12") {
+  if (is12HourTimeFormat(settings)) {
     amBtn = document.createElement("button");
     amBtn.className = "yd-time-ampm";
     amBtn.textContent = "AM";
@@ -3241,17 +3533,23 @@ function renderMomentComposer(parent, dateKey, existing, ctx, done, replaceTarge
   editor.value = existing?.text || "";
   wrap.appendChild(editor);
   fitTextarea(editor);
+  const disposeComposerScroll = attachMobilePanelKeyboardScroll(wrap, [
+    editor,
+    hourInput,
+    minuteInput
+  ]);
   ensureFocusInput(editor);
 
   let committed = false;
   const finish = async () => {
     if (committed) return;
     committed = true;
+    if (typeof disposeComposerScroll === "function") disposeComposerScroll();
     const value = editor.value.trim();
     let h = Number(hourInput.value);
     const m = Math.max(0, Math.min(59, Number(minuteInput.value) || 0));
     if (!Number.isFinite(h)) h = 0;
-    if (settings.timeFormat === "12") {
+    if (is12HourTimeFormat(settings)) {
       let h12 = ((h % 12) || 12);
       if (isPm) h12 = h12 === 12 ? 12 : h12 + 12;
       else h12 = h12 === 12 ? 0 : h12;
@@ -3277,6 +3575,7 @@ function renderMomentComposer(parent, dateKey, existing, ctx, done, replaceTarge
     } else if (e.key === "Escape") {
       e.preventDefault();
       committed = true;
+      if (typeof disposeComposerScroll === "function") disposeComposerScroll();
       wrap.remove();
       if (typeof done === "function") done();
     }
@@ -3347,12 +3646,13 @@ __yd_modules["lib/sections/monthly-planner"] = function(module, exports, require
 "use strict";
 
 const obsidian = require("obsidian");
-const { Notice, Menu } = obsidian;
+const { Notice, Menu, Platform } = obsidian;
 const { formatDateKey, formatMonthKey, pad2, shiftYear, parseDateKey } = __yd_require("lib/date-utils");
 const { makeId } = __yd_require("lib/store");
 const { ConfirmModal, FullPageModal } = __yd_require("lib/ui-modals");
 const { fitTextarea, ensureFocusInput, createIconButton } = __yd_require("lib/dom-utils");
 const { createArchiveNote, buildArchiveBody } = __yd_require("lib/archive");
+const { attachMobilePanelKeyboardScroll } = __yd_require("lib/mobile-composer-scroll");
 
 const MONTH_LABELS_EN = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
 const MONTH_LABELS_ZH = ["一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"];
@@ -3551,9 +3851,11 @@ function renderMonthSelectComposer(parent, defaultMonthKey, ctx, done, moreActio
   if (defaultMonthKey) select.value = defaultMonthKey;
 
   let committed = false;
+  let disposeKb = () => {};
   const cancel = () => {
     if (committed) return;
     committed = true;
+    disposeKb();
     wrap.remove();
     done?.();
   };
@@ -3573,10 +3875,12 @@ function renderMonthSelectComposer(parent, defaultMonthKey, ctx, done, moreActio
   editor.placeholder = t("monthlyPlanner.placeholder");
   ensureFocusInput(editor);
   fitTextarea(editor);
+  disposeKb = attachMobilePanelKeyboardScroll(wrap, [editor, select]);
 
   const finish = async () => {
     if (committed) return;
     committed = true;
+    disposeKb();
     const value = editor.value.trim();
     const targetMonthKey = select.value;
     wrap.remove();
@@ -3612,10 +3916,12 @@ function renderInlineEditor(parent, initial, onCommit, onCancel) {
   editor.value = initial || "";
   fitTextarea(editor);
   ensureFocusInput(editor);
+  const disposeKb = attachMobilePanelKeyboardScroll(wrap, [editor]);
   let committed = false;
   const finish = async (value) => {
     if (committed) return;
     committed = true;
+    disposeKb();
     wrap.remove();
     await onCommit(value);
   };
@@ -3626,6 +3932,7 @@ function renderInlineEditor(parent, initial, onCommit, onCancel) {
     } else if (e.key === "Escape") {
       e.preventDefault();
       committed = true;
+      disposeKb();
       wrap.remove();
       if (typeof onCancel === "function") onCancel();
     }
@@ -3705,23 +4012,36 @@ function renderYearlyView(root, ctx, modal) {
       renderYearlyView(root, ctx, modal);
     }
   });
+  const isMobilePlanner = !!Platform?.isMobile;
   for (let m = 0; m < 12; m += 1) {
     const monthKey = `${year}-${pad2(m + 1)}`;
     const col = grid.createDiv({ cls: "yd-planner-cell" });
-    col.createDiv({ cls: "yd-planner-month", text: getMonthLabel(m, ctx) });
+    let addBtn;
+    if (isMobilePlanner) {
+      const cellHead = col.createDiv({ cls: "yd-planner-cell-head" });
+      cellHead.createDiv({ cls: "yd-planner-month", text: getMonthLabel(m, ctx) });
+      addBtn = cellHead.createEl("button", {
+        cls: "yd-add-button yd-planner-head-add",
+        text: t("common.sectionAdd")
+      });
+    } else {
+      col.createDiv({ cls: "yd-planner-month", text: getMonthLabel(m, ctx) });
+    }
     const list = col.createDiv({ cls: "yd-planner-list" });
     getEntries(settings, monthKey).forEach((entry) => renderEntryRow(list, entry, monthKey, modalCtx));
-    const addBtn = col.createEl("button", { cls: "yd-add-button", text: t("monthlyPlanner.addShort") });
+    if (!isMobilePlanner) {
+      addBtn = col.createEl("button", { cls: "yd-add-button", text: t("monthlyPlanner.addShort") });
+    }
     addBtn.onclick = () => {
-      addBtn.style.display = "none";
+      if (!isMobilePlanner) addBtn.style.display = "none";
       renderInlineEditor(col, "", async (value) => {
-        addBtn.style.display = "";
+        if (!isMobilePlanner) addBtn.style.display = "";
         if (!value) return;
         createEntry(settings, monthKey, value);
         await ctx.save();
         renderYearlyView(root, ctx, modal);
       }, () => {
-        addBtn.style.display = "";
+        if (!isMobilePlanner) addBtn.style.display = "";
       });
     };
   }
@@ -3779,12 +4099,13 @@ __yd_modules["lib/sections/quick-entries"] = function(module, exports, require) 
 "use strict";
 
 const obsidian = require("obsidian");
-const { Notice, Menu, TFile } = obsidian;
+const { Notice, Menu, TFile, Platform } = obsidian;
 const { makeId } = __yd_require("lib/store");
 const { PALETTE } = __yd_require("lib/constants");
 const { FullPageModal, NotePickerModal, ConfirmModal } = __yd_require("lib/ui-modals");
 const { withAlpha } = __yd_require("lib/color-utils");
 const { createIconButton } = __yd_require("lib/dom-utils");
+const { attachMobileFullpageDelegatedInputScroll } = __yd_require("lib/mobile-composer-scroll");
 
 function getEntries(settings, side) {
   const block = settings?.data?.quickEntries || {};
@@ -3828,10 +4149,12 @@ async function openLinkedNote(plugin, notePath) {
   return true;
 }
 
-function renderQuickEntriesSide(parent, side, ctx) {
+function renderQuickEntriesSide(parent, side, ctx, options) {
+  const opts = options || {};
   const { settings, t } = ctx;
   if (settings.showSection?.quickEntries === false) return;
   const wrap = parent.createDiv({ cls: `yd-quick-side yd-quick-${side}` });
+  if (opts.alwaysShowAdd) wrap.addClass("yd-quick-side--add-visible");
   const list = wrap.createDiv({ cls: "yd-quick-list" });
   const entries = getEntries(settings, side);
   entries.forEach((entry) => renderQuickButton(list, entry, side, ctx));
@@ -3841,6 +4164,24 @@ function renderQuickEntriesSide(parent, side, ctx) {
     text: t("quickEntries.add")
   });
   addBtn.onclick = () => openSettings(ctx, side);
+}
+
+/** Mobile Links tab: one column; + opens left-column quick link settings (right column via desktop). */
+function renderQuickEntriesMobileStack(parent, ctx) {
+  const { settings, t } = ctx;
+  if (settings.showSection?.quickEntries === false) return;
+  const wrap = parent.createDiv({
+    cls: "yd-quick-side yd-quick-mobile-stack yd-quick-side--add-visible"
+  });
+  const list = wrap.createDiv({ cls: "yd-quick-list" });
+  getEntries(settings, "left").forEach((entry) => renderQuickButton(list, entry, "left", ctx));
+  getEntries(settings, "right").forEach((entry) => renderQuickButton(list, entry, "right", ctx));
+  const blank = wrap.createDiv({ cls: "yd-quick-blank" });
+  const addBtn = blank.createEl("button", {
+    cls: "yd-quick-add",
+    text: t("quickEntries.add")
+  });
+  addBtn.onclick = () => openSettings(ctx, "left");
 }
 
 function renderQuickButton(parent, entry, side, ctx) {
@@ -3933,12 +4274,18 @@ function renderQuickButton(parent, entry, side, ctx) {
 
 function openSettings(ctx, side) {
   const { plugin, t } = ctx;
-  const titleKey = side === "left" ? "quickEntries.left" : "quickEntries.right";
-  const modal = new FullPageModal(plugin.app, {
-    title: t(titleKey),
+  let modal;
+  modal = new FullPageModal(plugin.app, {
+    title: t("quickEntries.settingsTitle"),
     titleClass: "yd-settings-modal",
     render: (root, instance) => renderSettings(root, ctx, side, instance),
-    onClose: () => finalizeQuickEntries(ctx, side)
+    onClose: () => {
+      if (typeof modal._ydFullpageInputKbCleanup === "function") {
+        modal._ydFullpageInputKbCleanup();
+        modal._ydFullpageInputKbCleanup = null;
+      }
+      finalizeQuickEntries(ctx, side);
+    }
   });
   modal.open();
 }
@@ -3954,6 +4301,10 @@ async function finalizeQuickEntries(ctx, side) {
 }
 
 function renderSettings(root, ctx, side, modal) {
+  if (typeof modal._ydFullpageInputKbCleanup === "function") {
+    modal._ydFullpageInputKbCleanup();
+    modal._ydFullpageInputKbCleanup = null;
+  }
   root.empty();
   const { settings, t, plugin } = ctx;
   root.createDiv({ cls: "yd-settings-desc", text: t("quickEntries.settingsDesc") });
@@ -3961,9 +4312,15 @@ function renderSettings(root, ctx, side, modal) {
   const list = root.createDiv({ cls: "yd-settings-list" });
   const entries = settings.data.quickEntries[side];
 
+  const isMobileQE = !!Platform?.isMobile;
   entries.forEach((entry, idx) => {
-    const row = list.createDiv({ cls: "yd-settings-row yd-quick-settings-row" });
-    const drag = row.createDiv({ cls: "yd-drag-handle" });
+    const row = list.createDiv({
+      cls: isMobileQE
+        ? "yd-settings-row yd-quick-settings-row yd-quick-settings-row--stacked"
+        : "yd-settings-row yd-quick-settings-row"
+    });
+    const top = isMobileQE ? row.createDiv({ cls: "yd-quick-settings-top" }) : row;
+    const drag = top.createDiv({ cls: "yd-drag-handle" });
     createIconButton(drag, "grip-vertical", { cls: "yd-drag-handle-icon", fallback: "⋮⋮" });
     drag.setAttribute("draggable", "true");
     drag.addEventListener("dragstart", (e) => {
@@ -3988,7 +4345,7 @@ function renderSettings(root, ctx, side, modal) {
       renderSettings(root, ctx, side, modal);
     });
 
-    const colorWrap = row.createDiv({ cls: "yd-color-wrap" });
+    const colorWrap = top.createDiv({ cls: "yd-color-wrap" });
     const colorBtn = colorWrap.createEl("button", { cls: "yd-color-button" });
     colorBtn.style.backgroundColor = entry.color || "#af9165";
     let palette = null;
@@ -4031,7 +4388,7 @@ function renderSettings(root, ctx, side, modal) {
       document.addEventListener("mousedown", closeOnce, true);
     };
 
-    const input = row.createEl("input", { type: "text", cls: "yd-settings-input" });
+    const input = top.createEl("input", { type: "text", cls: "yd-settings-input" });
     input.value = entry.name;
     input.placeholder = t("quickEntries.entryName");
     input.onchange = async () => {
@@ -4040,14 +4397,12 @@ function renderSettings(root, ctx, side, modal) {
       ctx.refresh();
     };
 
-    const noteBtn = row.createEl("button", { cls: "yd-settings-link" });
-    noteBtn.setText(entry.notePath || t("quickEntries.linkNote"));
-    noteBtn.onclick = () => {
+    const openNotePicker = (noteBtnEl) => {
       const picker = new NotePickerModal(plugin.app, {
         placeholder: t("quickEntries.notePicker"),
         onChoose: async (file) => {
           entry.notePath = file.path;
-          noteBtn.setText(file.path);
+          noteBtnEl.setText(file.path);
           await ctx.save();
           renderSettings(root, ctx, side, modal);
           ctx.refresh();
@@ -4056,7 +4411,23 @@ function renderSettings(root, ctx, side, modal) {
       picker.open();
     };
 
-    const delBtn = createIconButton(row, "x", {
+    let noteBtn;
+    if (isMobileQE) {
+      const linkRow = row.createDiv({ cls: "yd-quick-settings-linkrow" });
+      noteBtn = linkRow.createEl("button", {
+        cls: "yd-settings-link yd-quick-settings-link",
+        type: "button"
+      });
+    } else {
+      noteBtn = row.createEl("button", {
+        cls: "yd-settings-link yd-quick-settings-link",
+        type: "button"
+      });
+    }
+    noteBtn.setText(entry.notePath || t("quickEntries.linkNote"));
+    noteBtn.onclick = () => openNotePicker(noteBtn);
+
+    const delBtn = createIconButton(top, "x", {
       cls: "yd-settings-delete",
       label: t("common.delete"),
       fallback: "✕"
@@ -4088,14 +4459,271 @@ function renderSettings(root, ctx, side, modal) {
   const actions = root.createDiv({ cls: "yd-modal-actions yd-modal-actions-end" });
   const closeBtn = actions.createEl("button", { cls: "yd-modal-confirm", text: t("common.confirm") });
   closeBtn.onclick = () => modal.close();
+
+  if (isMobileQE) attachMobileFullpageDelegatedInputScroll(root, modal);
 }
 
 module.exports = {
   renderSide: renderQuickEntriesSide,
+  renderMobileStack: renderQuickEntriesMobileStack,
   openSettings,
   getEntries,
-  setEntries
+  setEntries,
+  openLinkedNote
 };
+
+};
+
+__yd_modules["lib/note-search"] = function(module, exports, require) {
+"use strict";
+
+function normalizeQueryTag(s) {
+  return `${s || ""}`.replace(/^#/, "").trim().toLowerCase();
+}
+
+function fileTagSet(metadataCache, file) {
+  const set = new Set();
+  const cache = metadataCache.getFileCache(file);
+  if (!cache) return set;
+  if (Array.isArray(cache.tags)) {
+    for (const entry of cache.tags) {
+      if (entry && entry.tag) set.add(normalizeQueryTag(entry.tag));
+    }
+  }
+  const fm = cache.frontmatter?.tags;
+  if (Array.isArray(fm)) {
+    for (const x of fm) {
+      if (typeof x === "string") set.add(normalizeQueryTag(x));
+    }
+  } else if (typeof fm === "string") {
+    set.add(normalizeQueryTag(fm));
+  }
+  return set;
+}
+
+function snippetAround(body, qLower) {
+  const lower = (body || "").toLowerCase();
+  const idx = lower.indexOf(qLower);
+  if (idx < 0) return "";
+  const start = Math.max(0, idx - 28);
+  const slice = body.slice(start, start + 120).replace(/\s+/g, " ").trim();
+  return `${start > 0 ? "…" : ""}${slice}${start + 120 < body.length ? "…" : ""}`;
+}
+
+/**
+ * @param {import("obsidian").App} app
+ * @param {string} rawQuery
+ * @param {number} [maxResults]
+ * @returns {Promise<Array<{ file: import("obsidian").TFile, display: string }>>}
+ */
+async function searchMarkdownNotes(app, rawQuery, maxResults) {
+  const cap = Number.isFinite(maxResults) ? maxResults : 40;
+  const q = `${rawQuery || ""}`.trim().toLowerCase();
+  if (!q) return [];
+  const files = app.vault.getMarkdownFiles();
+  const picked = [];
+  const seen = new Set();
+  const tagNeedle = q.startsWith("#") ? normalizeQueryTag(q) : null;
+  const tagOnly = tagNeedle !== null && tagNeedle.length > 0;
+
+  for (const file of files) {
+    if (picked.length >= cap) break;
+    const baseName =
+      typeof file.basename === "string"
+        ? file.basename
+        : (file.name || file.path.split("/").pop() || "");
+    const baseLower = baseName.toLowerCase();
+    let hit = baseLower.includes(q);
+    let display = hit ? baseName : "";
+
+    if (!hit) {
+      const tags = fileTagSet(app.metadataCache, file);
+      for (const tag of tags) {
+        if (tagOnly) {
+          if (tag === tagNeedle || tag.endsWith(`/${tagNeedle}`)) {
+            hit = true;
+            display = `#${tag}`;
+            break;
+          }
+        } else if (tag.includes(q)) {
+          hit = true;
+          display = `#${tag}`;
+          break;
+        }
+      }
+    }
+
+    if (!hit && typeof app.vault?.read === "function") {
+      try {
+        const body = await app.vault.read(file);
+        const sn = snippetAround(body, q);
+        if (sn) {
+          hit = true;
+          display = sn;
+        }
+      } catch (_e) {}
+    }
+
+    if (hit && !seen.has(file.path)) {
+      seen.add(file.path);
+      picked.push({ file, display: display || baseName });
+    }
+  }
+  return picked;
+}
+
+module.exports = { searchMarkdownNotes, fileTagSet, normalizeQueryTag };
+
+};
+
+__yd_modules["lib/mobile-dashboard"] = function(module, exports, require) {
+"use strict";
+
+const { TFile } = require("obsidian");
+
+const calendarSection = __yd_require("lib/sections/calendar");
+const dataLogSection = __yd_require("lib/sections/data-log");
+const taskBoxSection = __yd_require("lib/sections/task-box");
+const checkInSection = __yd_require("lib/sections/check-in");
+const momentsSection = __yd_require("lib/sections/daily-moments");
+const plannerSection = __yd_require("lib/sections/monthly-planner");
+const quickEntriesSection = __yd_require("lib/sections/quick-entries");
+const { searchMarkdownNotes } = __yd_require("lib/note-search");
+
+function renderTabBar(parent, ctx) {
+  const row = parent.createDiv({ cls: "yd-mobile-tabrow" });
+  const active = ctx.state.mobileTab || "today";
+  const tabs = [
+    { id: "today", labelKey: "mobile.tabToday" },
+    { id: "trackers", labelKey: "mobile.tabTrackers" },
+    { id: "tasks", labelKey: "mobile.tabTasks" },
+    { id: "links", labelKey: "mobile.tabLinks" }
+  ];
+  tabs.forEach(({ id, labelKey }) => {
+    const btn = row.createEl("button", {
+      cls: "yd-mobile-tab",
+      type: "button",
+      text: ctx.t(labelKey)
+    });
+    if (id === active) btn.addClass("is-active");
+    btn.setAttr("aria-pressed", id === active ? "true" : "false");
+    btn.onclick = () => {
+      ctx.state.mobileTab = id;
+      ctx.refresh();
+    };
+  });
+}
+
+function tabEmpty(panel, ctx) {
+  panel.createDiv({ cls: "yd-empty-tip yd-mobile-tab-empty", text: ctx.t("mobile.tabEmpty") });
+}
+
+function renderToday(panel, ctx) {
+  const { settings } = ctx;
+  calendarSection.render(panel, ctx, { layout: "mobileCard" });
+  if (settings.showSection?.dailyMoments !== false) {
+    momentsSection.render(panel, ctx, { layout: "mobileCard" });
+  }
+}
+
+function renderTrackers(panel, ctx) {
+  const { settings } = ctx;
+  let any = false;
+  if (settings.showSection?.dataLog !== false) {
+    dataLogSection.render(panel, ctx);
+    any = true;
+  }
+  if (settings.showSection?.checkIn !== false) {
+    checkInSection.render(panel, ctx);
+    any = true;
+  }
+  if (!any) tabEmpty(panel, ctx);
+}
+
+function renderTasks(panel, ctx) {
+  const { settings } = ctx;
+  let any = false;
+  if (settings.showSection?.taskBox !== false) {
+    taskBoxSection.render(panel, ctx);
+    any = true;
+  }
+  if (settings.showSection?.monthlyPlanner !== false) {
+    plannerSection.render(panel, ctx);
+    any = true;
+  }
+  if (!any) tabEmpty(panel, ctx);
+}
+
+function renderLinks(panel, ctx) {
+  const { settings, t, app, plugin } = ctx;
+  if (settings.showSection?.quickEntries === false) {
+    tabEmpty(panel, ctx);
+    return;
+  }
+  const wrap = panel.createDiv({ cls: "yd-mobile-links-wrap" });
+
+  const searchBlock = wrap.createDiv({ cls: "yd-mobile-search-block" });
+  const inputRow = searchBlock.createDiv({ cls: "yd-mobile-search-row" });
+  const input = inputRow.createEl("input", {
+    type: "search",
+    cls: "yd-mobile-search-input",
+    attr: { placeholder: t("mobile.searchPlaceholder"), enterkeyhint: "search" }
+  });
+  const resultsEl = searchBlock.createDiv({ cls: "yd-mobile-search-results" });
+
+  const runSearch = async () => {
+    resultsEl.empty();
+    const q = input.value.trim();
+    if (!q) return;
+    const hits = await searchMarkdownNotes(app, q, 50);
+    if (hits.length === 0) {
+      resultsEl.createDiv({ cls: "yd-empty-tip", text: t("mobile.noResults") });
+      return;
+    }
+    const list = resultsEl.createDiv({ cls: "yd-mobile-search-list" });
+    hits.forEach(({ file, display }) => {
+      if (!(file instanceof TFile)) return;
+      const row = list.createEl("button", { cls: "yd-mobile-search-hit", type: "button" });
+      row.setText(display || file.basename);
+      row.title = file.path;
+      row.onclick = async () => {
+        await quickEntriesSection.openLinkedNote(plugin, file.path);
+      };
+    });
+  };
+
+  const searchBtn = inputRow.createEl("button", {
+    cls: "yd-mobile-search-submit",
+    type: "button",
+    text: t("common.search")
+  });
+  searchBtn.onclick = () => {
+    runSearch();
+  };
+  input.onkeydown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      runSearch();
+    }
+  };
+
+  const stack = wrap.createDiv({ cls: "yd-mobile-quick-stack" });
+  quickEntriesSection.renderMobileStack(stack, ctx);
+}
+
+function renderMobileDashboard(root, ctx) {
+  root.addClass("yd-mobile-root");
+  const dock = root.createDiv({ cls: "yd-mobile-dock" });
+  renderTabBar(dock, ctx);
+  const panel = root.createDiv({ cls: "yd-mobile-panel" });
+  const tab = ctx.state.mobileTab || "today";
+  if (tab === "today") renderToday(panel, ctx);
+  else if (tab === "trackers") renderTrackers(panel, ctx);
+  else if (tab === "tasks") renderTasks(panel, ctx);
+  else renderLinks(panel, ctx);
+}
+
+module.exports = { renderMobileDashboard };
 
 };
 
@@ -4106,12 +4734,12 @@ const obsidian = require("obsidian");
 const {
   Plugin,
   ItemView,
-  Notice,
   PluginSettingTab,
   Setting,
   ToggleComponent,
   setIcon,
-  addIcon
+  addIcon,
+  Platform
 } = obsidian;
 
 const constants = __yd_require("lib/constants");
@@ -4126,6 +4754,7 @@ const checkInSection = __yd_require("lib/sections/check-in");
 const momentsSection = __yd_require("lib/sections/daily-moments");
 const plannerSection = __yd_require("lib/sections/monthly-planner");
 const quickEntriesSection = __yd_require("lib/sections/quick-entries");
+const mobileDashboard = __yd_require("lib/mobile-dashboard");
 
 const { VIEW_TYPE, ICON_ID, SECTION_LIMITS, DEFAULT_SETTINGS } = constants;
 
@@ -4197,7 +4826,8 @@ class YoriDashboardView extends ItemView {
     super(leaf);
     this.plugin = plugin;
     this.viewState = {
-      focusDateKey: dateUtils.formatDateKey(new Date())
+      focusDateKey: dateUtils.formatDateKey(new Date()),
+      mobileTab: "today"
     };
     this.clipboard = {};
     this._renderHandle = null;
@@ -4253,7 +4883,9 @@ class YoriDashboardView extends ItemView {
       getLimit(section) {
         const length = plugin.settings.sectionLength || "medium";
         const limits = SECTION_LIMITS[length] || SECTION_LIMITS.medium;
-        return limits[section] || limits.dailyEvents;
+        const base = limits[section] || limits.dailyEvents;
+        if (Platform.isMobile) return Math.max(base, 200);
+        return base;
       }
     };
     return ctx;
@@ -4264,9 +4896,17 @@ class YoriDashboardView extends ItemView {
     const host = this.containerEl.children[1] || this.containerEl;
     host.empty();
     host.addClass("yd-view-content");
+    if (Platform.isMobile) host.addClass("yd-view-content--mobile");
+    else host.removeClass("yd-view-content--mobile");
+
     const root = host.createDiv({ cls: "yd-root" });
     const ctx = this.buildContext();
     const settings = this.plugin.settings;
+
+    if (Platform.isMobile) {
+      mobileDashboard.renderMobileDashboard(root, ctx);
+      return;
+    }
 
     calendarSection.render(root, ctx);
 
@@ -4326,19 +4966,21 @@ class YoriDashboardSettingTab extends PluginSettingTab {
           })
       );
 
-    new Setting(containerEl)
-      .setName(t("settings.sectionLength"))
-      .setDesc(t("settings.sectionLengthDesc"))
-      .addDropdown((dd) =>
-        dd
-          .addOption("medium", t("settings.sectionLengthMedium"))
-          .addOption("long", t("settings.sectionLengthLong"))
-          .setValue(this.plugin.settings.sectionLength)
-          .onChange(async (value) => {
-            this.plugin.settings.sectionLength = value;
-            await this.plugin.saveSettings();
-          })
-      );
+    if (!Platform.isMobile) {
+      new Setting(containerEl)
+        .setName(t("settings.sectionLength"))
+        .setDesc(t("settings.sectionLengthDesc"))
+        .addDropdown((dd) =>
+          dd
+            .addOption("medium", t("settings.sectionLengthMedium"))
+            .addOption("long", t("settings.sectionLengthLong"))
+            .setValue(this.plugin.settings.sectionLength)
+            .onChange(async (value) => {
+              this.plugin.settings.sectionLength = value;
+              await this.plugin.saveSettings();
+            })
+        );
+    }
 
     new Setting(containerEl)
       .setName(t("settings.timeFormat"))
@@ -4453,9 +5095,13 @@ class YoriDashboardSettingTab extends PluginSettingTab {
     const tipsBlock = containerEl.createDiv({ cls: "yd-settings-tips-block" });
     const tipsContent = tipsBlock.createDiv({ cls: "yd-settings-tips-content" });
     tipsContent.createEl("div", { cls: "yd-settings-tips-title", text: t("settings.tipsTitle") });
-    ["settings.tipMobile"].forEach((key) => {
-      tipsContent.createEl("div", { cls: "yd-settings-tip-line", text: t(key) });
-    });
+    String(t("settings.tipsLines") || "")
+      .split("\n")
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .forEach((line) => {
+        tipsContent.createEl("div", { cls: "yd-settings-tip-line", text: line });
+      });
 
     const donateLink = tipsBlock.createEl("a", {
       cls: "yd-settings-donate",

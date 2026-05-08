@@ -387,12 +387,21 @@
 .yd-moment-row,
 .yd-planner-row {
   display: flex;
-  align-items: flex-start;
   gap: 6px;
   padding: 4px 6px;
   border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.15s ease;
+}
+
+.yd-event-row,
+.yd-moment-row {
+  align-items: center;
+}
+
+.yd-task-row,
+.yd-planner-row {
+  align-items: flex-start;
 }
 
 .yd-event-row {
@@ -406,13 +415,31 @@
   background-color: rgba(255, 255, 255, 0.55);
 }
 
-.yd-event-row input[type="checkbox"],
+.yd-event-row input[type="checkbox"] {
+  margin-top: 0;
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  flex-shrink: 0;
+  align-self: center;
+}
+
 .yd-task-row input[type="checkbox"] {
   margin-top: 4px;
   width: 14px;
   height: 14px;
   cursor: pointer;
   flex-shrink: 0;
+}
+
+/* 任务盒子全屏弹窗：复选框与文字垂直居中 */
+.yd-fullpage-modal.yd-taskbox-modal .yd-task-row {
+  align-items: center;
+}
+
+.yd-fullpage-modal.yd-taskbox-modal .yd-task-row input[type="checkbox"] {
+  margin-top: 0;
+  align-self: center;
 }
 
 .yd-dashboard-host,
@@ -672,6 +699,15 @@
   height: 14px;
 }
 
+.yd-root.yd-mobile-root .yd-datalog-list {
+  padding-left: 30px;
+}
+
+.yd-root.yd-mobile-root .yd-checkin-list {
+  padding-left: 20px;
+  gap: 22px;
+}
+
 .yd-inline-input {
   border: 1px solid var(--yd-accent-deep);
   border-radius: 4px;
@@ -790,6 +826,10 @@
   padding: 2px 4px 2px 11px;
 }
 
+.yd-root.yd-mobile-root .yd-checkin-row {
+  padding-left: 30px;
+}
+
 .yd-checkin-btn {
   width: 50px;
   height: 26px;
@@ -809,12 +849,36 @@
   border-style: solid;
   color: #fff !important;
   font-weight: 700;
-  font-size: 15px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  padding: 0;
+}
+
+.yd-checkin-btn.is-done svg {
+  width: 15px;
+  height: 15px;
+}
+
+.yd-root.yd-mobile-root .yd-checkin-btn {
+  width: 54px;
+  height: 32px;
+}
+
+.yd-root.yd-mobile-root .yd-checkin-btn.is-done svg {
+  width: 17px;
+  height: 17px;
 }
 
 .yd-checkin-name {
   font-size: 15px;
   color: var(--yd-text);
+}
+
+.yd-root.yd-mobile-root .yd-checkin-btn:not(.is-done) {
+  font-size: 11px;
+  letter-spacing: 0.2px;
 }
 
 /* ====== moments ====== */
@@ -871,6 +935,25 @@
   background-color: transparent;
   color: var(--yd-text);
   font-size: 13px;
+}
+
+.yd-root.yd-mobile-root .yd-moment-composer .yd-time-input {
+  border-radius: 0;
+  width: 58px;
+  min-width: 58px;
+  padding: 4px 6px;
+}
+
+.yd-root.yd-mobile-root .yd-moment-time-input {
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+}
+
+.yd-root.yd-mobile-root .yd-time-ampm {
+  flex-shrink: 0;
+  min-height: 32px;
+  box-sizing: border-box;
 }
 
 .yd-time-colon {
@@ -987,6 +1070,11 @@
   color: #b9bb7e !important;
 }
 
+.yd-quick-side--add-visible .yd-quick-add {
+  opacity: 1;
+  pointer-events: auto;
+}
+
 /* ====== modals ====== */
 .yd-fullpage-modal .modal {
   width: min(900px, 90vw);
@@ -1077,6 +1165,92 @@
   transform: translateY(-50%);
 }
 
+.yd-week-top--bar {
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.yd-week-top--bar .yd-week-bar {
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: minmax(32px, auto) 1fr minmax(32px, auto);
+  align-items: center;
+  column-gap: 6px;
+  min-width: 0;
+}
+
+.yd-week-top--bar .yd-week-bar > .yd-mini-arrow:first-of-type {
+  justify-self: start;
+}
+
+.yd-week-top--bar .yd-week-bar > .yd-mini-arrow:last-of-type {
+  justify-self: end;
+}
+
+.yd-week-top--bar .yd-week-range-stack {
+  justify-self: center;
+}
+
+.yd-week-range-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 0;
+  flex-shrink: 1;
+}
+
+.yd-week-range-line {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--yd-accent);
+  letter-spacing: 0.3px;
+  line-height: 1.2;
+  text-align: center;
+  max-width: 100%;
+}
+
+.yd-week-range-pipe {
+  width: 1px;
+  height: 12px;
+  margin: 0;
+  flex-shrink: 0;
+  background: var(--yd-text-muted);
+  opacity: 0.55;
+}
+
+/* 桌面端：日期范围横向，中间用连字符 */
+.yd-fullpage-modal.yd-week-modal:not(.yd-fullpage-modal--mobile) .yd-week-range-stack {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.yd-fullpage-modal.yd-week-modal:not(.yd-fullpage-modal--mobile) .yd-week-range-pipe {
+  width: auto;
+  height: auto;
+  background: none;
+  opacity: 1;
+  flex-shrink: 0;
+}
+
+.yd-fullpage-modal.yd-week-modal:not(.yd-fullpage-modal--mobile) .yd-week-range-pipe::before {
+  content: "-";
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--yd-accent);
+  line-height: 1;
+}
+
+.yd-week-top--bar .yd-week-archive-inline {
+  position: static !important;
+  transform: none !important;
+  top: auto !important;
+  right: auto !important;
+  flex-shrink: 0;
+}
+
 .yd-week-range,
 .yd-history-title {
   font-size: 17px;
@@ -1092,6 +1266,12 @@
   row-gap: 12px;
 }
 
+.yd-fullpage-modal--mobile.yd-week-modal .yd-week-grid {
+  grid-template-columns: 1fr;
+  column-gap: 0;
+  row-gap: 16px;
+}
+
 .yd-week-col {
   border: none;
   border-radius: 0;
@@ -1103,13 +1283,41 @@
   min-height: auto;
 }
 
-.yd-week-col-day {
+.yd-week-col-head {
+  margin-bottom: 4px;
+}
+
+.yd-week-col-head--with-actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--yd-text-muted);
+  border-bottom: 1px solid currentColor;
+  padding: 6px 4px 2px;
+}
+
+.yd-week-col-head--with-actions .yd-week-col-day {
+  flex: 1;
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 500;
+  color: inherit;
+  cursor: pointer;
+  padding: 2px 0 0;
+  letter-spacing: 0;
+  margin-bottom: 0;
+  border-bottom: none;
+}
+
+.yd-week-col-head:not(.yd-week-col-head--with-actions) .yd-week-col-day {
   font-size: 15px;
   font-weight: 500;
   color: var(--yd-text-muted);
   cursor: pointer;
   padding: 4px 4px 4px;
-  border-bottom: 1px solid var(--yd-text-muted);
+  border-bottom: 1px solid currentColor;
   letter-spacing: 0;
   margin-bottom: 4px;
 }
@@ -1131,6 +1339,24 @@
 .yd-week-col:hover .yd-add-button {
   opacity: 1;
   pointer-events: auto;
+}
+
+.yd-fullpage-modal--mobile.yd-week-modal .yd-week-col .yd-add-button {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.yd-fullpage-modal--mobile.yd-week-modal .yd-week-col:hover .yd-add-button {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.yd-week-col-head--with-actions .yd-add-button {
+  flex-shrink: 0;
+  align-self: center;
+  margin-top: 0;
+  padding-left: 8px;
+  padding-right: 0;
 }
 
 .yd-week-list {
@@ -1290,8 +1516,13 @@
 .yd-taskbox-fullgrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  column-gap: 32px;
-  row-gap: 24px;
+  column-gap: 24px;
+  row-gap: 20px;
+}
+
+.yd-fullpage-modal--mobile.yd-taskbox-modal .yd-taskbox-fullgrid {
+  grid-template-columns: 1fr;
+  column-gap: 0;
 }
 
 .yd-taskbox-fullcol {
@@ -1303,15 +1534,35 @@
   gap: 4px;
 }
 
-.yd-taskbox-fullcol .yd-taskbox-name {
+.yd-taskbox-fullhead {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--yd-text-muted);
+  border-bottom: 1px solid currentColor;
+  padding: 10px 4px 2px;
+  margin-bottom: 2px;
+}
+
+.yd-taskbox-fullhead .yd-taskbox-name {
+  flex: 1;
+  min-width: 0;
   font-size: 15px;
   font-weight: 500;
-  color: var(--yd-text-muted);
+  color: inherit;
   text-transform: none;
   letter-spacing: 0;
-  border-bottom: 1px solid var(--yd-text-muted);
-  padding: 4px 4px 4px;
-  margin-bottom: 2px;
+  border-bottom: none;
+  padding: 0;
+  margin-bottom: 0;
+}
+
+.yd-taskbox-fullhead .yd-add-button {
+  flex-shrink: 0;
+  margin-top: 0;
+  padding-right: 0;
 }
 
 .yd-taskbox-fullcol .yd-add-button {
@@ -1319,7 +1570,7 @@
   font-weight: 500;
   letter-spacing: 0;
   padding-left: 4px;
-  margin-top: 4px;
+  margin-top: 0;
   opacity: 0;
   transition: opacity 0.15s ease;
   pointer-events: none;
@@ -1328,6 +1579,38 @@
 .yd-taskbox-fullcol:hover .yd-add-button {
   opacity: 1;
   pointer-events: auto;
+}
+
+.yd-fullpage-modal--mobile.yd-taskbox-modal .yd-taskbox-fullcol .yd-add-button {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.yd-fullpage-modal--mobile.yd-taskbox-modal .yd-taskbox-fullcol:hover .yd-add-button {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.yd-taskbox-fullcol .yd-taskbox-fullhead .yd-add-button {
+  flex-shrink: 0;
+  padding-left: 8px;
+  padding-right: 0;
+}
+
+/* desktop task box modal: divider under box title (same color as title) */
+.yd-fullpage-modal.yd-taskbox-modal:not(.yd-fullpage-modal--mobile) .yd-taskbox-fullcol > .yd-taskbox-name {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--yd-text-muted);
+  letter-spacing: 0;
+  text-transform: none;
+  padding: 4px 4px 4px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid currentColor;
+}
+
+.yd-taskbox-fullcol > .yd-add-button {
+  margin-top: 4px;
 }
 
 .yd-taskbox-fulllist {
@@ -1340,9 +1623,14 @@
 .yd-planner-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  column-gap: 32px;
-  row-gap: 0;
+  column-gap: 24px;
+  row-gap: 12px;
   margin-top: 8px;
+}
+
+.yd-fullpage-modal--mobile.yd-planner-modal .yd-planner-grid {
+  grid-template-columns: 1fr;
+  column-gap: 0;
 }
 
 .yd-planner-cell {
@@ -1354,14 +1642,44 @@
   gap: 4px;
 }
 
-.yd-planner-cell .yd-planner-month {
+.yd-planner-cell > .yd-planner-month {
   font-size: 15px;
   font-weight: 500;
   color: var(--yd-text-muted);
   letter-spacing: 0;
-  border-bottom: 1px solid var(--yd-text-muted);
+  border-bottom: 1px solid currentColor;
   padding: 4px 4px 4px;
   margin-bottom: 4px;
+}
+
+.yd-planner-cell-head {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--yd-text-muted);
+  border-bottom: 1px solid currentColor;
+  padding: 10px 4px 2px;
+  margin-bottom: 4px;
+}
+
+.yd-planner-cell-head .yd-planner-month {
+  flex: 1;
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 500;
+  color: inherit;
+  letter-spacing: 0;
+  border-bottom: none;
+  padding: 0;
+  margin-bottom: 0;
+}
+
+.yd-planner-cell-head .yd-add-button {
+  flex-shrink: 0;
+  margin-top: 0;
+  padding-right: 0;
 }
 
 .yd-planner-cell .yd-add-button {
@@ -1378,6 +1696,21 @@
 .yd-planner-cell:hover .yd-add-button {
   opacity: 1;
   pointer-events: auto;
+}
+
+.yd-fullpage-modal--mobile.yd-planner-modal .yd-planner-cell .yd-add-button {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.yd-planner-cell .yd-planner-cell-head .yd-add-button {
+  flex-shrink: 0;
+  padding-left: 8px;
+  padding-right: 0;
+}
+
+.yd-planner-cell > .yd-add-button {
+  margin-top: 4px;
 }
 
 /* ====== settings modal ====== */
@@ -1414,9 +1747,57 @@
   background-color: transparent;
 }
 
-.yd-checkin-settings-row,
-.yd-quick-settings-row {
+.yd-checkin-settings-row {
   grid-template-columns: 28px auto 1fr auto auto;
+}
+
+.yd-quick-settings-row--stacked {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.yd-quick-settings-row:not(.yd-quick-settings-row--stacked) {
+  display: grid;
+  grid-template-columns: 28px auto minmax(0, 1fr) minmax(0, 1.1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.yd-quick-settings-row:not(.yd-quick-settings-row--stacked) .yd-quick-settings-link {
+  box-sizing: border-box;
+  max-width: none;
+  width: 100%;
+  min-width: 0;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.yd-quick-settings-top {
+  display: grid;
+  grid-template-columns: 28px auto 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.yd-quick-settings-linkrow {
+  margin-left: calc(28px + 8px);
+  min-width: 0;
+}
+
+.yd-quick-settings-linkrow .yd-quick-settings-link {
+  box-sizing: border-box;
+  max-width: none;
+  width: 100%;
+  display: block;
+  white-space: normal;
+  word-break: break-all;
+  line-height: 1.4;
+  text-align: left;
 }
 
 .yd-settings-row.is-dragging {
@@ -1950,4 +2331,356 @@
 .theme-dark .yd-calendar-more {
   color: var(--yd-accent) !important;
   background-color: transparent !important;
+}
+
+/* ============================================================
+   Mobile layout (Obsidian.phone / tablet — Platform.isMobile)
+   ============================================================ */
+.yd-view-content--mobile {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  padding: 0 !important;
+  box-sizing: border-box;
+}
+
+.yd-root.yd-mobile-root {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0 10px 10px;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.yd-mobile-dock {
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: var(--yd-panel-bg, #f8f7f6);
+  border-bottom: 1px solid var(--yd-border);
+  padding-top: 4px;
+  margin: 0 -10px;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.theme-dark .yd-mobile-dock {
+  background: var(--background-primary);
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.yd-mobile-tabrow {
+  display: flex;
+  flex-direction: row;
+  gap: 4px;
+}
+
+.yd-mobile-tab {
+  flex: 1 1 0;
+  margin: 0;
+  padding: 10px 6px 8px;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--yd-text-muted);
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  min-height: 44px;
+  box-sizing: border-box;
+}
+
+.yd-mobile-tab.is-active {
+  color: var(--yd-accent-deep);
+  font-weight: 700;
+  border-bottom-color: var(--yd-accent-deep);
+}
+
+.yd-mobile-panel {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
+  gap: var(--yd-section-gap);
+  padding-top: 10px;
+  padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px) + 80px);
+}
+
+/* 移动端录入框：为键盘留出可滚动空间（与 JS class 同步） */
+.yd-mobile-panel.yd-mobile-panel--keyboard-composer {
+  padding-bottom: calc(
+    28px + env(safe-area-inset-bottom, 0px) + 80px + min(36dvh, 300px)
+  );
+}
+
+.yd-fullpage-content.yd-fullpage-content--keyboard-composer {
+  padding-bottom: min(40dvh, 320px);
+}
+
+.yd-mobile-tab-empty {
+  padding: 24px 12px;
+  text-align: center;
+}
+
+.yd-mobile-links-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.yd-mobile-quick-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.yd-mobile-quick-stack .yd-quick-side {
+  width: 100%;
+  max-width: 100%;
+}
+
+.yd-mobile-quick-stack .yd-quick-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.yd-mobile-search-block {
+  margin-top: 0;
+  margin-bottom: 2px;
+  padding: 12px 10px;
+  background-color: var(--yd-section-bg);
+  border: 1px solid var(--yd-section-border);
+  border-radius: var(--yd-radius);
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: 1fr;
+  align-content: center;
+  min-height: 52px;
+  gap: 0;
+}
+
+.yd-mobile-search-block:has(.yd-mobile-search-results:not(:empty)) {
+  align-content: start;
+  min-height: 0;
+}
+
+.yd-mobile-search-results:empty {
+  display: none;
+}
+
+.yd-mobile-search-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--yd-text);
+  margin-bottom: 8px;
+}
+
+.yd-mobile-search-row {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  align-items: center;
+}
+
+.yd-mobile-search-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 5px 8px;
+  min-height: 32px;
+  border: 1px solid var(--yd-border);
+  border-radius: var(--yd-radius);
+  font-size: 14px;
+  font-family: inherit;
+  background: var(--yd-section-bg);
+  color: var(--yd-text);
+  box-sizing: border-box;
+}
+
+.yd-mobile-search-submit {
+  flex-shrink: 0;
+  padding: 5px 10px;
+  border: 1px solid var(--yd-accent-deep);
+  border-radius: var(--yd-radius);
+  background: transparent;
+  color: var(--yd-accent-deep);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  min-height: 32px;
+  box-sizing: border-box;
+}
+
+.yd-mobile-search-results {
+  margin-top: 12px;
+}
+
+.yd-mobile-search-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 45vh;
+  overflow-y: auto;
+}
+
+.yd-mobile-search-hit {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  border: 1px solid var(--yd-border);
+  border-radius: var(--yd-radius);
+  background: var(--yd-card-bg);
+  color: var(--yd-text);
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  word-break: break-all;
+  min-height: 44px;
+  box-sizing: border-box;
+}
+
+.theme-dark .yd-mobile-search-hit {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.theme-dark .yd-mobile-search-input {
+  background: #2f2c26;
+  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--yd-text);
+}
+
+/* Today tab：日历 + 每日事件合并卡片（与效果图一致） */
+.yd-calendar-mobile-card {
+  width: 100% !important;
+  max-width: 100%;
+  padding: 16px 16px 18px !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  border-radius: 10px;
+  border: 1px solid var(--yd-section-border);
+  background: var(--yd-section-bg);
+  box-sizing: border-box;
+}
+
+.yd-calendar-body--mobile-stack {
+  display: flex;
+  flex-direction: column;
+  grid-template-columns: unset;
+  column-gap: 0;
+  row-gap: 0;
+  padding-left: 0 !important;
+  align-items: stretch;
+}
+
+.yd-calendar-body--mobile-stack .yd-calendar-mini {
+  width: 100%;
+  padding-left: 0;
+}
+
+.yd-calendar-mobile-card .yd-mini-head {
+  margin-top: 8px;
+  margin-bottom: 14px;
+}
+
+.yd-calendar-mobile-divider {
+  height: 1px;
+  background: var(--yd-border);
+  margin: 20px 0 22px;
+  flex-shrink: 0;
+}
+
+.yd-calendar-body--mobile-stack .yd-calendar-events {
+  width: 100%;
+  padding-left: 0;
+  gap: 6px;
+}
+
+.yd-calendar-mobile-card .yd-events-head {
+  margin-bottom: 3px;
+  min-height: unset;
+}
+
+.yd-calendar-mobile-card .yd-events-date {
+  font-family: Georgia, "Times New Roman", "Songti SC", "华文仿宋", serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--yd-text);
+  letter-spacing: 0.02em;
+}
+
+.yd-events-list--mobile {
+  max-height: min(42dvh, 280px);
+}
+
+.yd-calendar-mobile-events-footer {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 6px;
+  padding-top: 4px;
+}
+
+.yd-calendar-more-mobile {
+  position: static !important;
+  right: auto !important;
+  top: auto !important;
+  flex-shrink: 0;
+}
+
+.yd-calendar-mobile-card .yd-mini-cell {
+  padding: 8px 0;
+  min-height: 36px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+}
+
+.yd-calendar-mobile-card .yd-mini-cell.is-focus {
+  border-radius: 6px;
+}
+
+.yd-moments-mobile-card {
+  width: 100% !important;
+  max-width: 100%;
+  padding: 18px 16px 20px !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  border-radius: 10px;
+  border: 1px solid var(--yd-section-border);
+  background: var(--yd-section-bg);
+  box-sizing: border-box;
+}
+
+.yd-moments-list--mobile {
+  max-height: min(38dvh, 360px);
+}
+
+.theme-dark .yd-calendar-mobile-card,
+.theme-dark .yd-moments-mobile-card {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.theme-dark .yd-calendar-mobile-divider {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.yd-moments-mobile-card .yd-moment-add-mobile {
+  padding-left: 24px;
+  margin-left: -4px;
 }

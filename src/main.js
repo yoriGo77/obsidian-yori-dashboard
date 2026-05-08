@@ -4,12 +4,12 @@ const obsidian = require("obsidian");
 const {
   Plugin,
   ItemView,
-  Notice,
   PluginSettingTab,
   Setting,
   ToggleComponent,
   setIcon,
-  addIcon
+  addIcon,
+  Platform
 } = obsidian;
 
 const constants = require("../lib/constants");
@@ -24,6 +24,7 @@ const checkInSection = require("../lib/sections/check-in");
 const momentsSection = require("../lib/sections/daily-moments");
 const plannerSection = require("../lib/sections/monthly-planner");
 const quickEntriesSection = require("../lib/sections/quick-entries");
+const mobileDashboard = require("../lib/mobile-dashboard");
 
 const { VIEW_TYPE, ICON_ID, SECTION_LIMITS, DEFAULT_SETTINGS } = constants;
 
@@ -95,7 +96,8 @@ class YoriDashboardView extends ItemView {
     super(leaf);
     this.plugin = plugin;
     this.viewState = {
-      focusDateKey: dateUtils.formatDateKey(new Date())
+      focusDateKey: dateUtils.formatDateKey(new Date()),
+      mobileTab: "today"
     };
     this.clipboard = {};
     this._renderHandle = null;
@@ -151,7 +153,9 @@ class YoriDashboardView extends ItemView {
       getLimit(section) {
         const length = plugin.settings.sectionLength || "medium";
         const limits = SECTION_LIMITS[length] || SECTION_LIMITS.medium;
-        return limits[section] || limits.dailyEvents;
+        const base = limits[section] || limits.dailyEvents;
+        if (Platform.isMobile) return Math.max(base, 200);
+        return base;
       }
     };
     return ctx;
@@ -162,9 +166,17 @@ class YoriDashboardView extends ItemView {
     const host = this.containerEl.children[1] || this.containerEl;
     host.empty();
     host.addClass("yd-view-content");
+    if (Platform.isMobile) host.addClass("yd-view-content--mobile");
+    else host.removeClass("yd-view-content--mobile");
+
     const root = host.createDiv({ cls: "yd-root" });
     const ctx = this.buildContext();
     const settings = this.plugin.settings;
+
+    if (Platform.isMobile) {
+      mobileDashboard.renderMobileDashboard(root, ctx);
+      return;
+    }
 
     calendarSection.render(root, ctx);
 
@@ -224,19 +236,21 @@ class YoriDashboardSettingTab extends PluginSettingTab {
           })
       );
 
-    new Setting(containerEl)
-      .setName(t("settings.sectionLength"))
-      .setDesc(t("settings.sectionLengthDesc"))
-      .addDropdown((dd) =>
-        dd
-          .addOption("medium", t("settings.sectionLengthMedium"))
-          .addOption("long", t("settings.sectionLengthLong"))
-          .setValue(this.plugin.settings.sectionLength)
-          .onChange(async (value) => {
-            this.plugin.settings.sectionLength = value;
-            await this.plugin.saveSettings();
-          })
-      );
+    if (!Platform.isMobile) {
+      new Setting(containerEl)
+        .setName(t("settings.sectionLength"))
+        .setDesc(t("settings.sectionLengthDesc"))
+        .addDropdown((dd) =>
+          dd
+            .addOption("medium", t("settings.sectionLengthMedium"))
+            .addOption("long", t("settings.sectionLengthLong"))
+            .setValue(this.plugin.settings.sectionLength)
+            .onChange(async (value) => {
+              this.plugin.settings.sectionLength = value;
+              await this.plugin.saveSettings();
+            })
+        );
+    }
 
     new Setting(containerEl)
       .setName(t("settings.timeFormat"))
@@ -351,9 +365,13 @@ class YoriDashboardSettingTab extends PluginSettingTab {
     const tipsBlock = containerEl.createDiv({ cls: "yd-settings-tips-block" });
     const tipsContent = tipsBlock.createDiv({ cls: "yd-settings-tips-content" });
     tipsContent.createEl("div", { cls: "yd-settings-tips-title", text: t("settings.tipsTitle") });
-    ["settings.tipMobile"].forEach((key) => {
-      tipsContent.createEl("div", { cls: "yd-settings-tip-line", text: t(key) });
-    });
+    String(t("settings.tipsLines") || "")
+      .split("\n")
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .forEach((line) => {
+        tipsContent.createEl("div", { cls: "yd-settings-tip-line", text: line });
+      });
 
     const donateLink = tipsBlock.createEl("a", {
       cls: "yd-settings-donate",
