@@ -52,7 +52,7 @@ An Obsidian dashboard plugin that gathers your daily events, data logs, tasks, c
 ## Compatibility
 
 - Minimum Obsidian version: see `minAppVersion` in `manifest.json`.
-- Desktop only (mobile is not yet supported).
+- **Desktop and mobile (phone & tablet)** — The plugin runs on Obsidian desktop and on Obsidian Mobile with a tab-based layout (daily / trackers / tasks / links). `manifest.json` sets `isDesktopOnly` to `false`.
 
 ## Development
 
