@@ -961,6 +961,7 @@ class ConfirmModal extends Modal {
   }
   onOpen() {
     const opts = this.options;
+    this.modalEl?.addClass("yd-yori-modal");
     const { contentEl, titleEl } = this;
     titleEl.setText(opts.title || "确认");
     contentEl.empty();
@@ -986,6 +987,7 @@ class ConfirmModal extends Modal {
     requestAnimationFrame(() => confirmBtn.focus());
   }
   onClose() {
+    this.modalEl?.removeClass("yd-yori-modal");
     this.contentEl.empty();
   }
 }
@@ -997,6 +999,7 @@ class PromptModal extends Modal {
   }
   onOpen() {
     const opts = this.options;
+    this.modalEl?.addClass("yd-yori-modal");
     const { contentEl, titleEl } = this;
     titleEl.setText(opts.title || "请输入");
     contentEl.empty();
@@ -1040,6 +1043,7 @@ class PromptModal extends Modal {
     requestAnimationFrame(() => input.focus());
   }
   onClose() {
+    this.modalEl?.removeClass("yd-yori-modal");
     this.contentEl.empty();
   }
 }
@@ -2978,7 +2982,7 @@ const {
 } = __yd_require("lib/date-utils");
 const { makeId } = __yd_require("lib/store");
 const { ConfirmModal, FullPageModal } = __yd_require("lib/ui-modals");
-const { PALETTE } = __yd_require("lib/constants");
+const { PALETTE, ACCENT } = __yd_require("lib/constants");
 const { withAlpha } = __yd_require("lib/color-utils");
 const { createIconButton } = __yd_require("lib/dom-utils");
 
@@ -3050,19 +3054,23 @@ function renderCheckInSection(parent, ctx) {
 }
 
 function setCheckInRowButtonState(btn, item, checked, t) {
-  btn.style.backgroundColor = "";
-  btn.style.color = "";
+  btn.style.removeProperty("color");
+  btn.style.removeProperty("background-color");
+  btn.style.removeProperty("border-color");
+  btn.style.removeProperty("--yd-checkin-done-bg");
+  btn.style.removeProperty("--yd-checkin-done-border");
   btn.empty();
+  const markColor = item.color || PALETTE[0]?.color || ACCENT;
   if (checked) {
     btn.addClass("is-done");
-    btn.style.backgroundColor = item.color;
-    btn.style.borderColor = item.color;
+    btn.style.setProperty("--yd-checkin-done-bg", markColor);
+    btn.style.setProperty("--yd-checkin-done-border", markColor);
     setIcon(btn, "check");
     btn.style.color = "#ffffff";
   } else {
     btn.removeClass("is-done");
     btn.setText(t("checkIn.button"));
-    btn.style.borderColor = withAlpha(item.color, 0.5);
+    btn.style.borderColor = withAlpha(markColor, 0.5);
   }
 }
 
@@ -4258,9 +4266,10 @@ function renderQuickEntriesMobileStack(parent, ctx) {
 function renderQuickButton(parent, entry, side, ctx) {
   const { settings, t, plugin } = ctx;
   const btn = parent.createEl("button", { cls: "yd-quick-button" });
-  btn.style.backgroundColor = withAlpha(entry.color || "#af9165", 0.2);
-  btn.style.borderColor = entry.color || "#af9165";
-  btn.style.color = entry.color || "#af9165";
+  const base = entry.color || "#af9165";
+  btn.style.setProperty("--yd-quick-bg", withAlpha(base, 0.2));
+  btn.style.setProperty("--yd-quick-border", base);
+  btn.style.setProperty("--yd-quick-fg", base);
   btn.setText(entry.name || t("common.unnamed"));
   btn.dataset.entryId = entry.id;
   btn.dataset.side = side;

@@ -113,15 +113,37 @@ const patches = [
   display: grid;
   grid-template-columns: minmax(32px, auto) 1fr minmax(32px, auto);
   align-items: center;
-  column-gap: 6px;
+  gap: 6px;
   min-width: 0;
+}
+
+.yd-week-top--bar .yd-week-bar > .yd-mini-arrow:first-of-type {
+  justify-self: start;
+}
+
+.yd-week-top--bar .yd-week-bar > .yd-mini-arrow:last-of-type {
+  justify-self: end;
+}
+
+.yd-week-top--bar .yd-week-range-stack {
+  justify-self: center;
 }`,
 		`.yd-week-top--bar .yd-week-bar {
   flex: 1 1 auto;
-  display: grid;
-  grid-template-columns: minmax(32px, auto) 1fr minmax(32px, auto);
+  display: flex;
+  flex-direction: row;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.yd-week-top--bar .yd-week-bar > .yd-mini-arrow {
+  flex-shrink: 0;
+}
+
+.yd-week-top--bar .yd-week-range-stack {
+  flex-shrink: 1;
   min-width: 0;
 }`,
 	],
