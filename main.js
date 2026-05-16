@@ -189,6 +189,7 @@ const I18N = {
     "common.backToMonth": "回到本月",
     "common.backToYear": "回到本年",
     "common.sectionAdd": "+Add",
+    "common.markComplete": "完成",
 
     "section.calendar": "日历与每日事件",
     "section.dataLog": "数据记录",
@@ -235,6 +236,8 @@ const I18N = {
     "taskBox.selectBox": "选择盒子",
     "taskBox.deleteBoxConfirm": "盒子 “{name}” 下还有任务，删除将清空所有任务。是否继续？",
     "taskBox.deleteTaskConfirm": "是否删除任务「{title}」？",
+    "taskBox.clearCompleted": "清理已完成",
+    "taskBox.clearCompletedConfirm": "将永久删除「{name}」下所有已完成的任务，是否继续？",
     "taskBox.empty": "暂无任务",
 
     "checkIn.title": "打卡",
@@ -352,6 +355,7 @@ const I18N = {
     "common.backToMonth": "Back to this month",
     "common.backToYear": "Back to this year",
     "common.sectionAdd": "+Add",
+    "common.markComplete": "Mark complete",
 
     "section.calendar": "Calendar & Events",
     "section.dataLog": "Data Log",
@@ -398,6 +402,8 @@ const I18N = {
     "taskBox.selectBox": "Select box",
     "taskBox.deleteBoxConfirm": "Box \"{name}\" still has tasks. Deleting will clear them. Continue?",
     "taskBox.deleteTaskConfirm": "Delete task \"{title}\"?",
+    "taskBox.clearCompleted": "Clear completed",
+    "taskBox.clearCompletedConfirm": "Permanently delete all completed tasks under “{name}”. Continue?",
     "taskBox.empty": "No tasks",
 
     "checkIn.title": "Check-in",
@@ -2448,6 +2454,24 @@ function deleteTask(settings, taskId) {
   });
 }
 
+function clearCompletedTasksInBox(settings, boxId) {
+  if (!settings?.data?.taskBox || !boxId) return 0;
+  const tasks = settings.data.taskBox.tasks || [];
+  const before = tasks.filter((task) => task.boxId === boxId && task.completed).length;
+  const filtered = tasks.filter((task) => task.boxId !== boxId || !task.completed);
+  settings.data.taskBox.tasks = filtered;
+  const byBox = {};
+  filtered.forEach((task) => {
+    const list = byBox[task.boxId] || (byBox[task.boxId] = []);
+    list.push(task);
+  });
+  Object.values(byBox).forEach((list) => {
+    list.sort((a, b) => a.order - b.order);
+    list.forEach((task, idx) => { task.order = idx; });
+  });
+  return before;
+}
+
 function deleteBox(settings, boxId) {
   if (!settings?.data?.taskBox) return;
   settings.data.taskBox.boxes = (settings.data.taskBox.boxes || []).filter((box) => box.id !== boxId);
@@ -2558,6 +2582,41 @@ function renderTaskRow(parent, task, ctx, options) {
     evt.preventDefault();
     const t = ctx.t;
     const menu = new Menu();
+    if (!task.completed) {
+      menu.addItem((item) =>
+        item.setTitle(t("common.markComplete")).onClick(async () => {
+          updateTask(ctx.settings, task.id, { completed: true });
+          await ctx.save();
+          if (typeof opts.onChange === "function") opts.onChange();
+          else ctx.refresh();
+        })
+      );
+    }
+    if (variant === "checkbox") {
+      const completedInBox = getTasksForBox(ctx.settings, task.boxId).filter((x) => x.completed).length;
+      if (completedInBox > 0) {
+        menu.addItem((item) =>
+          item.setTitle(t("taskBox.clearCompleted")).onClick(() => {
+            const boxMeta = getBoxes(ctx.settings).find((b) => b.id === task.boxId);
+            const boxLabel = boxMeta ? (boxMeta.name || t("common.unnamed")) : t("common.unnamed");
+            const confirm = new ConfirmModal(ctx.plugin.app, {
+              title: t("taskBox.clearCompleted"),
+              message: t("taskBox.clearCompletedConfirm", { name: boxLabel }),
+              confirmText: t("common.confirm"),
+              cancelText: t("common.cancel"),
+              warning: true,
+              onConfirm: async () => {
+                clearCompletedTasksInBox(ctx.settings, task.boxId);
+                await ctx.save();
+                if (typeof opts.onChange === "function") opts.onChange();
+                else ctx.refresh();
+              }
+            });
+            confirm.open();
+          })
+        );
+      }
+    }
     menu.addItem((item) =>
       item.setTitle(t("common.delete")).onClick(() => {
         const confirm = new ConfirmModal(ctx.plugin.app, {
@@ -2589,6 +2648,7 @@ function renderTaskComposer(parent, ctx, done, moreAction) {
     return;
   }
   const wrap = parent.createDiv({ cls: "yd-task-composer" });
+  parent.addClass("yd-section--composer-open");
   const headerRow = wrap.createDiv({ cls: "yd-composer-header" });
   const select = headerRow.createEl("select", { cls: "yd-select" });
   boxes.forEach((box) => {
@@ -2600,6 +2660,7 @@ function renderTaskComposer(parent, ctx, done, moreAction) {
     if (committed) return;
     committed = true;
     wrap.remove();
+    parent.removeClass("yd-section--composer-open");
     done?.();
   };
   if (typeof moreAction === "function") {
@@ -2623,6 +2684,7 @@ function renderTaskComposer(parent, ctx, done, moreAction) {
     const value = editor.value.trim();
     const boxId = select.value;
     wrap.remove();
+    parent.removeClass("yd-section--composer-open");
     if (value && boxId) {
       createTask(settings, boxId, value);
       await ctx.save();
@@ -2667,6 +2729,10 @@ function renderFullTaskBox(root, ctx, modal) {
   const boxes = getBoxes(settings);
   const grid = root.createDiv({ cls: "yd-taskbox-fullgrid" });
   const isMobileTb = !!Platform?.isMobile;
+  const bumpModal = () => {
+    ctx.refresh();
+    renderFullTaskBox(root, ctx, modal);
+  };
   boxes.forEach((box) => {
     const col = grid.createDiv({ cls: "yd-taskbox-fullcol" });
     let addBtn;
@@ -2682,7 +2748,7 @@ function renderFullTaskBox(root, ctx, modal) {
     }
     const list = col.createDiv({ cls: "yd-taskbox-fulllist" });
     getTasksForBox(settings, box.id).forEach((task) => {
-      renderTaskRow(list, task, ctx, { onChange: () => renderFullTaskBox(root, ctx, modal) });
+      renderTaskRow(list, task, ctx, { onChange: bumpModal });
     });
     if (!isMobileTb) {
       addBtn = col.createEl("button", { cls: "yd-add-button", text: t("taskBox.addTask") });
@@ -3839,6 +3905,7 @@ function renderEntryRow(parent, entry, monthKey, ctx) {
 function renderMonthSelectComposer(parent, defaultMonthKey, ctx, done, moreAction) {
   const { settings, t } = ctx;
   const wrap = parent.createDiv({ cls: "yd-task-composer yd-planner-composer" });
+  parent.addClass("yd-section--composer-open");
   const headerRow = wrap.createDiv({ cls: "yd-composer-header" });
   const select = headerRow.createEl("select", { cls: "yd-select" });
   const focusYear = parseInt((defaultMonthKey || "").slice(0, 4), 10) || new Date().getFullYear();
@@ -3857,6 +3924,7 @@ function renderMonthSelectComposer(parent, defaultMonthKey, ctx, done, moreActio
     committed = true;
     disposeKb();
     wrap.remove();
+    parent.removeClass("yd-section--composer-open");
     done?.();
   };
   if (typeof moreAction === "function") {
@@ -3884,6 +3952,7 @@ function renderMonthSelectComposer(parent, defaultMonthKey, ctx, done, moreActio
     const value = editor.value.trim();
     const targetMonthKey = select.value;
     wrap.remove();
+    parent.removeClass("yd-section--composer-open");
     if (value && targetMonthKey) {
       createEntry(settings, targetMonthKey, value);
       await ctx.save();
@@ -4028,7 +4097,9 @@ function renderYearlyView(root, ctx, modal) {
       col.createDiv({ cls: "yd-planner-month", text: getMonthLabel(m, ctx) });
     }
     const list = col.createDiv({ cls: "yd-planner-list" });
-    getEntries(settings, monthKey).forEach((entry) => renderEntryRow(list, entry, monthKey, modalCtx));
+    getEntries(settings, monthKey).forEach((entry) =>
+      renderEntryRow(list, entry, monthKey, modalCtx)
+    );
     if (!isMobilePlanner) {
       addBtn = col.createEl("button", { cls: "yd-add-button", text: t("monthlyPlanner.addShort") });
     }
@@ -4673,11 +4744,13 @@ function renderLinks(panel, ctx) {
 
   const runSearch = async () => {
     resultsEl.empty();
+    searchBlock.removeClass("yd-mobile-search-block--has-results");
     const q = input.value.trim();
     if (!q) return;
     const hits = await searchMarkdownNotes(app, q, 50);
     if (hits.length === 0) {
       resultsEl.createDiv({ cls: "yd-empty-tip", text: t("mobile.noResults") });
+      searchBlock.addClass("yd-mobile-search-block--has-results");
       return;
     }
     const list = resultsEl.createDiv({ cls: "yd-mobile-search-list" });
@@ -4690,6 +4763,7 @@ function renderLinks(panel, ctx) {
         await quickEntriesSection.openLinkedNote(plugin, file.path);
       };
     });
+    searchBlock.addClass("yd-mobile-search-block--has-results");
   };
 
   const searchBtn = inputRow.createEl("button", {

@@ -80,7 +80,7 @@
 .yd-grid {
   display: grid;
   grid-template-columns: var(--yd-col-left-width) var(--yd-col-right-width);
-  column-gap: var(--yd-col-gap);
+  gap: var(--yd-col-gap);
   align-items: stretch;
   margin-top: var(--yd-section-gap);
 }
@@ -274,7 +274,7 @@
 .yd-calendar-body {
   display: grid;
   grid-template-columns: 240px 1fr;
-  column-gap: 32px;
+  gap: 32px;
   align-items: start;
   position: relative;
   padding-left: 12px;
@@ -557,7 +557,7 @@
   width: 100%;
   border: 1px solid var(--yd-border);
   border-radius: 4px;
-  background-color: #fff;
+  background-color: #ffffff;
   padding: 6px 8px;
   resize: none;
   font-family: inherit;
@@ -717,7 +717,7 @@
   padding: 1px 4px;
   font-size: 15px;
   color: var(--yd-text);
-  background: #fff;
+  background: #ffffff;
   outline: none;
   width: 130px;
 }
@@ -792,8 +792,8 @@
   flex: 0 0 auto;
 }
 
-.yd-section-taskbox:has(> .yd-task-composer) > .yd-section-footer,
-.yd-section-planner:has(> .yd-task-composer) > .yd-section-footer {
+.yd-section-taskbox.yd-section--composer-open > .yd-section-footer,
+.yd-section-planner.yd-section--composer-open > .yd-section-footer {
   display: none;
 }
 
@@ -850,7 +850,7 @@
 
 .yd-checkin-btn.is-done {
   border-style: solid;
-  color: #fff;
+  color: #ffffff;
   font-weight: 700;
   display: inline-flex;
   align-items: center;
@@ -977,7 +977,7 @@
 
 .yd-time-ampm.is-active {
   background-color: var(--yd-accent-deep);
-  color: #fff;
+  color: #ffffff;
   border-color: var(--yd-accent-deep);
 }
 
@@ -1178,7 +1178,7 @@
   display: grid;
   grid-template-columns: minmax(32px, auto) 1fr minmax(32px, auto);
   align-items: center;
-  column-gap: 6px;
+  gap: 6px;
   min-width: 0;
 }
 
@@ -1265,14 +1265,12 @@
 .yd-week-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  column-gap: 24px;
-  row-gap: 12px;
+  gap: 12px 24px;
 }
 
 .yd-fullpage-modal--mobile.yd-week-modal .yd-week-grid {
   grid-template-columns: 1fr;
-  column-gap: 0;
-  row-gap: 16px;
+  gap: 16px;
 }
 
 .yd-week-col {
@@ -1319,7 +1317,7 @@
   font-weight: 500;
   color: var(--yd-text-muted);
   cursor: pointer;
-  padding: 4px 4px 4px;
+  padding: 4px;
   border-bottom: 1px solid currentColor;
   letter-spacing: 0;
   margin-bottom: 4px;
@@ -1370,8 +1368,9 @@
 
 /* ====== history ====== */
 .yd-history-grid {
-  column-width: 120px;
-  column-gap: 6px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 6px;
   padding: 4px;
 }
 
@@ -1383,15 +1382,11 @@
   justify-content: flex-start;
   gap: 6px;
   padding: 6px 10px;
-  margin-bottom: 6px;
   border: 1px solid var(--yd-border);
   border-radius: 4px;
   background-color: transparent;
   white-space: nowrap;
   overflow: hidden;
-  break-inside: avoid;
-  -webkit-column-break-inside: avoid;
-  page-break-inside: avoid;
 }
 
 .yd-history-cell > .yd-history-date {
@@ -1511,7 +1506,7 @@
 }
 
 .yd-checkin-cell.is-done {
-  color: #fff;
+  color: #ffffff;
   font-weight: 600;
 }
 
@@ -1519,13 +1514,12 @@
 .yd-taskbox-fullgrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  column-gap: 24px;
-  row-gap: 20px;
+  gap: 20px 24px;
 }
 
 .yd-fullpage-modal--mobile.yd-taskbox-modal .yd-taskbox-fullgrid {
   grid-template-columns: 1fr;
-  column-gap: 0;
+  gap: 20px;
 }
 
 .yd-taskbox-fullcol {
@@ -1607,7 +1601,7 @@
   color: var(--yd-text-muted);
   letter-spacing: 0;
   text-transform: none;
-  padding: 4px 4px 4px;
+  padding: 4px;
   margin-bottom: 4px;
   border-bottom: 1px solid currentColor;
 }
@@ -1626,14 +1620,13 @@
 .yd-planner-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  column-gap: 24px;
-  row-gap: 12px;
+  gap: 12px 24px;
   margin-top: 8px;
 }
 
 .yd-fullpage-modal--mobile.yd-planner-modal .yd-planner-grid {
   grid-template-columns: 1fr;
-  column-gap: 0;
+  gap: 12px;
 }
 
 .yd-planner-cell {
@@ -1651,7 +1644,7 @@
   color: var(--yd-text-muted);
   letter-spacing: 0;
   border-bottom: 1px solid currentColor;
-  padding: 4px 4px 4px;
+  padding: 4px;
   margin-bottom: 4px;
 }
 
@@ -1888,7 +1881,7 @@
   top: 30px;
   left: 0;
   z-index: 50;
-  background-color: #fff;
+  background-color: #ffffff;
   border: 1px solid var(--yd-border);
   border-radius: 4px;
   padding: 8px;
@@ -1961,7 +1954,7 @@
 
 .yd-modal-confirm {
   background-color: var(--yd-accent-deep);
-  color: #fff;
+  color: #ffffff;
   border: 1px solid var(--yd-accent-deep);
 }
 
@@ -1973,7 +1966,7 @@
 .yd-modal-confirm.is-warning {
   background-color: #c0533c;
   border-color: #c0533c;
-  color: #fff;
+  color: #ffffff;
 }
 
 /* Confirm in full-page modals (settings etc.) gets the green outlined look */
@@ -1994,7 +1987,7 @@
 
 .yd-fullpage-modal .yd-modal-confirm.is-warning {
   background-color: #c0533c;
-  color: #fff;
+  color: #ffffff;
   border-color: #c0533c;
 }
 
@@ -2049,7 +2042,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-muted, #888);
+  color: var(--text-muted, #888888);
   width: 18px;
   height: 18px;
   flex-shrink: 0;
@@ -2096,20 +2089,20 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  color: var(--text-muted, #888);
+  color: var(--text-muted, #888888);
   font-size: 13px;
   line-height: 1.6;
 }
 
 .yd-settings-tips-title {
   font-weight: 700;
-  color: var(--text-normal, #333);
+  color: var(--text-normal, #333333);
   font-size: 14px;
   margin-bottom: 2px;
 }
 
 .yd-settings-tip-line {
-  color: var(--text-muted, #888);
+  color: var(--text-muted, #888888);
 }
 
 .yd-settings-donate {
@@ -2124,7 +2117,7 @@
   border-radius: 6px;
   background-color: transparent;
   text-decoration: none;
-  color: var(--text-normal, #333);
+  color: var(--text-normal, #333333);
   cursor: pointer;
   transition: background-color 0.15s ease, border-color 0.15s ease;
   flex-shrink: 0;
@@ -2151,7 +2144,7 @@
 
 .yd-settings-donate-label {
   font-size: 12px;
-  color: var(--text-normal, #333);
+  color: var(--text-normal, #333333);
 }
 
 /* Hide native scrollbar styling but keep functional */
@@ -2290,7 +2283,7 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
-/* 小日历单元格悬停（如有用到 #fff hover 也兜底） */
+/* 小日历单元格悬停（如有用到 #ffffff hover 也兜底） */
 .theme-dark .yd-mini-cell:hover {
   background-color: rgba(255, 255, 255, 0.04);
 }
@@ -2476,7 +2469,7 @@
   gap: 0;
 }
 
-.yd-mobile-search-block:has(.yd-mobile-search-results:not(:empty)) {
+.yd-mobile-search-block.yd-mobile-search-block--has-results {
   align-content: start;
   min-height: 0;
 }
@@ -2584,8 +2577,7 @@
   display: flex;
   flex-direction: column;
   grid-template-columns: unset;
-  column-gap: 0;
-  row-gap: 0;
+  gap: 0;
   padding-left: 0;
   align-items: stretch;
 }
