@@ -1,7 +1,7 @@
 {
   "id": "yori-dashboard",
   "name": "Yori Dashboard",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "minAppVersion": "0.15.0",
   "description": "Daily dashboard for desktop and mobile: events, data logs, tasks, check-ins, moments, monthly plans, and quick links.",
   "author": "YoriGo",
