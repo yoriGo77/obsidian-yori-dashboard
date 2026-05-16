@@ -38,6 +38,80 @@
   background: transparent;
 }
 
+/*
+ * Obsidian themes often style .view-content and buttons with high specificity.
+ * Scoped rules restore dashboard visuals without !important.
+ */
+.workspace-leaf-content .yd-dashboard-host .yd-view-content {
+  background-color: #f8f7f6;
+}
+
+.workspace-leaf-content .yd-dashboard-host .yd-view-content .yd-root {
+  background-color: transparent;
+  color: var(--yd-text);
+}
+
+.workspace-leaf-content .yd-dashboard-host .yd-view-content .yd-section {
+  background-color: var(--yd-section-bg);
+  color: var(--yd-text);
+  border: 1px solid var(--yd-section-border);
+}
+
+.workspace-leaf-content .yd-dashboard-host .yd-view-content button.yd-add-button {
+  background: transparent;
+  border: none;
+  border-width: 0;
+  color: var(--yd-add-color);
+  box-shadow: none;
+  font-family: inherit;
+}
+
+.workspace-leaf-content .yd-dashboard-host .yd-view-content button.yd-add-button:hover {
+  color: #b9bb7e;
+  background: transparent;
+}
+
+.workspace-leaf-content .yd-dashboard-host .yd-view-content button.yd-checkin-btn {
+  box-shadow: none;
+  font-family: inherit;
+}
+
+.workspace-leaf-content .yd-dashboard-host .yd-view-content button.yd-quick-button {
+  border: 1px solid var(--yd-border);
+  background-color: transparent;
+  color: var(--yd-text);
+  box-shadow: none;
+  font-family: inherit;
+}
+
+.workspace-leaf-content .yd-dashboard-host .yd-view-content button.yd-quick-add {
+  border: 1px dashed var(--yd-add-color);
+  background: transparent;
+  color: var(--yd-add-color);
+  box-shadow: none;
+  font-family: inherit;
+}
+
+.workspace-leaf-content .yd-dashboard-host .yd-view-content .yd-icon-btn,
+.workspace-leaf-content .yd-dashboard-host .yd-view-content .yd-section-more-icon,
+.workspace-leaf-content .yd-dashboard-host .yd-view-content .yd-mini-arrow {
+  box-shadow: none;
+  font-family: inherit;
+}
+
+.workspace-leaf-content .yd-dashboard-host .yd-view-content .yd-event-editor,
+.workspace-leaf-content .yd-dashboard-host .yd-view-content .yd-inline-input {
+  background-color: #ffffff;
+  color: var(--yd-text);
+  font-family: inherit;
+}
+
+.workspace-leaf-content .yd-dashboard-host .yd-view-content .yd-select {
+  background-color: transparent;
+  color: var(--yd-text);
+  font-family: inherit;
+}
+
 .yd-root {
   --yd-accent: #99876c;
   --yd-accent-deep: #af9165;
@@ -1094,6 +1168,19 @@
 
 .yd-fullpage-modal .yd-add-button:hover {
   color: #b9bb7e;
+}
+
+body .yd-fullpage-modal button.yd-add-button {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  font-family: inherit;
+  color: var(--yd-add-color, #cecf96);
+}
+
+body .yd-fullpage-modal button.yd-add-button:hover {
+  color: #b9bb7e;
+  background: transparent;
 }
 
 .yd-fullpage-content {
@@ -2189,6 +2276,77 @@
 
 .theme-dark .yd-dashboard-host .yd-view-content {
   background-color: #1c1b19;
+}
+
+.theme-dark .workspace-leaf-content .yd-dashboard-host .yd-view-content {
+  background-color: #1c1b19;
+}
+
+.theme-dark .workspace-leaf-content .yd-dashboard-host .yd-view-content .yd-root {
+  background-color: transparent;
+  color: var(--yd-text);
+}
+
+.theme-dark .workspace-leaf-content .yd-dashboard-host .yd-view-content .yd-section {
+  background-color: var(--yd-section-bg);
+  color: var(--yd-text);
+  border: 1px solid var(--yd-section-border);
+}
+
+.theme-dark .workspace-leaf-content .yd-dashboard-host .yd-view-content button.yd-add-button {
+  background: transparent;
+  border: none;
+  border-width: 0;
+  color: var(--yd-add-color);
+  box-shadow: none;
+  font-family: inherit;
+}
+
+.theme-dark .workspace-leaf-content .yd-dashboard-host .yd-view-content button.yd-add-button:hover {
+  color: #b9bb7e;
+  background: transparent;
+}
+
+.theme-dark .workspace-leaf-content .yd-dashboard-host .yd-view-content button.yd-checkin-btn {
+  box-shadow: none;
+  font-family: inherit;
+}
+
+.theme-dark .workspace-leaf-content .yd-dashboard-host .yd-view-content button.yd-quick-button {
+  border: 1px solid var(--yd-border);
+  background-color: transparent;
+  color: var(--yd-text);
+  box-shadow: none;
+  font-family: inherit;
+}
+
+.theme-dark .workspace-leaf-content .yd-dashboard-host .yd-view-content button.yd-quick-add {
+  border: 1px dashed var(--yd-add-color);
+  background: transparent;
+  color: var(--yd-add-color);
+  box-shadow: none;
+  font-family: inherit;
+}
+
+.theme-dark .workspace-leaf-content .yd-dashboard-host .yd-view-content .yd-icon-btn,
+.theme-dark .workspace-leaf-content .yd-dashboard-host .yd-view-content .yd-section-more-icon,
+.theme-dark .workspace-leaf-content .yd-dashboard-host .yd-view-content .yd-mini-arrow {
+  box-shadow: none;
+  font-family: inherit;
+}
+
+.theme-dark .workspace-leaf-content .yd-dashboard-host .yd-view-content .yd-event-editor,
+.theme-dark .workspace-leaf-content .yd-dashboard-host .yd-view-content .yd-inline-input {
+  background-color: #2f2c26;
+  color: var(--yd-text);
+  font-family: inherit;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.theme-dark .workspace-leaf-content .yd-dashboard-host .yd-view-content .yd-select {
+  background-color: transparent;
+  color: var(--yd-text);
+  font-family: inherit;
 }
 
 .theme-dark .yd-root {
