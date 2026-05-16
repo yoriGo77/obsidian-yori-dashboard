@@ -1,7 +1,10 @@
 /* Full view host (covers Obsidian leaf area behind yd-root) */
-.yd-dashboard-host,
-.yd-view-content {
-  background-color: #f8f7f6 !important;
+.yd-dashboard-host {
+  background-color: #f8f7f6;
+}
+
+.yd-dashboard-host .yd-view-content {
+  background-color: #f8f7f6;
 }
 
 .yd-view-content {
@@ -203,7 +206,7 @@
   padding: 4px;
   border-radius: 4px;
   transition: background-color 0.15s ease, color 0.15s ease;
-  box-shadow: none !important;
+  box-shadow: none;
 }
 
 .yd-icon-btn:hover {
@@ -219,40 +222,40 @@
 .yd-section-icon {
   width: 28px;
   height: 28px;
-  background: transparent !important;
-  color: var(--yd-accent) !important;
+  background: transparent;
+  color: var(--yd-accent);
 }
 
 .yd-section-icon:hover {
-  color: var(--yd-accent-deep) !important;
-  background-color: rgba(153, 135, 108, 0.08) !important;
+  color: var(--yd-accent-deep);
+  background-color: rgba(153, 135, 108, 0.08);
 }
 
 .yd-section-more-icon {
   width: 28px;
   height: 28px;
   border-radius: 4px;
-  background-color: transparent !important;
-  border: none !important;
-  color: var(--yd-accent) !important;
-  box-shadow: none !important;
+  background-color: transparent;
+  border: none;
+  color: var(--yd-accent);
+  box-shadow: none;
 }
 
 .yd-section-more-icon:hover {
-  background-color: rgba(153, 135, 108, 0.08) !important;
-  color: var(--yd-accent-deep) !important;
+  background-color: rgba(153, 135, 108, 0.08);
+  color: var(--yd-accent-deep);
 }
 
 .yd-mini-arrow {
   width: 24px;
   height: 24px;
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
 
 .yd-mini-arrow:hover {
-  background-color: rgba(153, 135, 108, 0.08) !important;
+  background-color: rgba(153, 135, 108, 0.08);
 }
 
 .yd-mini-arrow .svg-icon {
@@ -376,7 +379,7 @@
 }
 
 .yd-calendar-more {
-  position: absolute !important;
+  position: absolute;
   right: 26px;
   bottom: 14px;
 }
@@ -473,17 +476,17 @@
   accent-color: #c4b6a0;
 }
 
-.yd-dashboard-host input[type="checkbox"]:checked,
+.yd-dashboard-host .yd-view-content input[type="checkbox"]:checked,
 .yd-fullpage-modal input[type="checkbox"]:checked {
-  background-color: #c4b6a0 !important;
-  border-color: #c4b6a0 !important;
-  color: #ffffff !important;
+  background-color: #c4b6a0;
+  border-color: #c4b6a0;
+  color: #ffffff;
 }
 
-.yd-dashboard-host input[type="checkbox"]:checked:hover,
+.yd-dashboard-host .yd-view-content input[type="checkbox"]:checked:hover,
 .yd-fullpage-modal input[type="checkbox"]:checked:hover {
-  background-color: #b8a994 !important;
-  border-color: #b8a994 !important;
+  background-color: #b8a994;
+  border-color: #b8a994;
 }
 
 .yd-event-row.is-done,
@@ -579,9 +582,9 @@
 
 /* ====== add buttons (text-only, same size as title) ====== */
 .yd-add-button {
-  background: transparent !important;
-  border: none !important;
-  color: var(--yd-add-color) !important;
+  background: transparent;
+  border: none;
+  color: var(--yd-add-color);
   padding: 6px 0 6px 6px;
   margin-left: 0;
   cursor: pointer;
@@ -592,12 +595,12 @@
   text-align: left;
   align-self: flex-start;
   transition: color 0.18s ease;
-  box-shadow: none !important;
+  box-shadow: none;
 }
 
 .yd-add-button:hover {
-  color: #b9bb7e !important;
-  background: transparent !important;
+  color: #b9bb7e;
+  background: transparent;
 }
 
 .yd-section-moments .yd-add-button {
@@ -785,7 +788,7 @@
 }
 
 .yd-composer-more {
-  position: static !important;
+  position: static;
   flex: 0 0 auto;
 }
 
@@ -837,17 +840,17 @@
   border: 1px dashed var(--yd-text-muted);
   background: transparent;
   cursor: pointer;
-  color: #a4a098 !important;
+  color: #a4a098;
   font-size: 13px;
   font-weight: 500;
   transition: all 0.2s ease;
   letter-spacing: 0.5px;
-  box-shadow: none !important;
+  box-shadow: none;
 }
 
 .yd-checkin-btn.is-done {
   border-style: solid;
-  color: #fff !important;
+  color: #fff;
   font-weight: 700;
   display: inline-flex;
   align-items: center;
@@ -969,7 +972,7 @@
   padding: 2px 8px;
   cursor: pointer;
   font-size: 13px;
-  box-shadow: none !important;
+  box-shadow: none;
 }
 
 .yd-time-ampm.is-active {
@@ -1020,7 +1023,7 @@
   padding: 6px 16px;
   cursor: pointer;
   font-size: 15px;
-  box-shadow: none !important;
+  box-shadow: none;
   transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
   user-select: none;
 }
@@ -1047,9 +1050,9 @@
 }
 
 .yd-quick-add {
-  border: 1px dashed var(--yd-add-color) !important;
-  background: transparent !important;
-  color: var(--yd-add-color) !important;
+  border: 1px dashed var(--yd-add-color);
+  background: transparent;
+  color: var(--yd-add-color);
   border-radius: 4px;
   padding: 5px 8px;
   cursor: pointer;
@@ -1059,7 +1062,7 @@
   opacity: 0;
   transition: opacity 0.18s ease, color 0.18s ease;
   align-self: flex-start;
-  box-shadow: none !important;
+  box-shadow: none;
 }
 
 .yd-quick-blank:hover .yd-quick-add {
@@ -1067,7 +1070,7 @@
 }
 
 .yd-quick-add:hover {
-  color: #b9bb7e !important;
+  color: #b9bb7e;
 }
 
 .yd-quick-side--add-visible .yd-quick-add {
@@ -1086,11 +1089,11 @@
 }
 
 .yd-fullpage-modal .yd-add-button {
-  color: #cecf96 !important;
+  color: #cecf96;
 }
 
 .yd-fullpage-modal .yd-add-button:hover {
-  color: #b9bb7e !important;
+  color: #b9bb7e;
 }
 
 .yd-fullpage-content {
@@ -1152,14 +1155,14 @@
 }
 
 .yd-history-archive {
-  position: absolute !important;
+  position: absolute;
   right: 0;
   top: 50%;
   transform: translateY(-50%);
 }
 
 .yd-week-top .yd-section-more-icon {
-  position: absolute !important;
+  position: absolute;
   right: 0;
   top: 50%;
   transform: translateY(-50%);
@@ -1244,10 +1247,10 @@
 }
 
 .yd-week-top--bar .yd-week-archive-inline {
-  position: static !important;
-  transform: none !important;
-  top: auto !important;
-  right: auto !important;
+  position: static;
+  transform: none;
+  top: auto;
+  right: auto;
   flex-shrink: 0;
 }
 
@@ -1850,7 +1853,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  box-shadow: none !important;
+  box-shadow: none;
 }
 
 .yd-settings-link:hover {
@@ -1877,7 +1880,7 @@
   border-radius: 4px;
   border: 1px solid rgba(0, 0, 0, 0.06);
   cursor: pointer;
-  box-shadow: none !important;
+  box-shadow: none;
 }
 
 .yd-color-palette {
@@ -1941,7 +1944,7 @@
   padding: 8px 22px;
   font-size: 14px;
   cursor: pointer;
-  box-shadow: none !important;
+  box-shadow: none;
   min-width: 112px;
 }
 
@@ -1970,29 +1973,29 @@
 .yd-modal-confirm.is-warning {
   background-color: #c0533c;
   border-color: #c0533c;
-  color: #fff !important;
+  color: #fff;
 }
 
 /* Confirm in full-page modals (settings etc.) gets the green outlined look */
 .yd-fullpage-modal .yd-modal-confirm {
-  background-color: transparent !important;
-  color: #cecf96 !important;
-  border: 1px solid #cecf96 !important;
+  background-color: transparent;
+  color: #cecf96;
+  border: 1px solid #cecf96;
   font-weight: 600;
   min-width: 132px;
   padding: 8px 28px;
 }
 
 .yd-fullpage-modal .yd-modal-confirm:hover {
-  background-color: rgba(206, 207, 150, 0.1) !important;
-  color: #b9bb7e !important;
-  border-color: #b9bb7e !important;
+  background-color: rgba(206, 207, 150, 0.1);
+  color: #b9bb7e;
+  border-color: #b9bb7e;
 }
 
 .yd-fullpage-modal .yd-modal-confirm.is-warning {
-  background-color: #c0533c !important;
-  color: #fff !important;
-  border-color: #c0533c !important;
+  background-color: #c0533c;
+  color: #fff;
+  border-color: #c0533c;
 }
 
 .yd-modal-input {
@@ -2120,7 +2123,7 @@
   border: 1px solid var(--background-modifier-border, #e3ddd1);
   border-radius: 6px;
   background-color: transparent;
-  text-decoration: none !important;
+  text-decoration: none;
   color: var(--text-normal, #333);
   cursor: pointer;
   transition: background-color 0.15s ease, border-color 0.15s ease;
@@ -2187,9 +2190,12 @@
    Dark mode overrides — Obsidian 在深色模式下给 body 加 .theme-dark
    ============================================================ */
 
-.theme-dark .yd-dashboard-host,
-.theme-dark .yd-view-content {
-  background-color: #1c1b19 !important;
+.theme-dark .yd-dashboard-host {
+  background-color: #1c1b19;
+}
+
+.theme-dark .yd-dashboard-host .yd-view-content {
+  background-color: #1c1b19;
 }
 
 .theme-dark .yd-root {
@@ -2223,17 +2229,17 @@
 }
 
 /* 复选框选中态：深色下用棕色填充 + 深色对勾 */
-.theme-dark .yd-dashboard-host input[type="checkbox"]:checked,
+.theme-dark .yd-dashboard-host .yd-view-content input[type="checkbox"]:checked,
 .theme-dark .yd-fullpage-modal input[type="checkbox"]:checked {
-  background-color: #b09c84 !important;
-  border-color: #b09c84 !important;
-  color: #1c1b19 !important;
+  background-color: #b09c84;
+  border-color: #b09c84;
+  color: #1c1b19;
 }
 
-.theme-dark .yd-dashboard-host input[type="checkbox"]:checked:hover,
+.theme-dark .yd-dashboard-host .yd-view-content input[type="checkbox"]:checked:hover,
 .theme-dark .yd-fullpage-modal input[type="checkbox"]:checked:hover {
-  background-color: #c2a888 !important;
-  border-color: #c2a888 !important;
+  background-color: #c2a888;
+  border-color: #c2a888;
 }
 
 /* 行 hover 高光：浅色用白透明 0.55 在深色完全失效，改为低透明白 */
@@ -2247,9 +2253,9 @@
 /* 输入框 / 编辑器背景 */
 .theme-dark .yd-event-editor,
 .theme-dark .yd-inline-input {
-  background-color: #2f2c26 !important;
-  color: var(--yd-text) !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
+  background-color: #2f2c26;
+  color: var(--yd-text);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .theme-dark .yd-event-editor:focus {
@@ -2274,7 +2280,7 @@
 /* 设置 / 提示分隔线 */
 .theme-dark .yd-settings-divider,
 .theme-dark .yd-modal-divider {
-  border-top-color: rgba(255, 255, 255, 0.08) !important;
+  border-top-color: rgba(255, 255, 255, 0.08);
 }
 
 /* 调色板 popup 背景 */
@@ -2329,8 +2335,8 @@
 .theme-dark .yd-section-icon,
 .theme-dark .yd-section-more-icon,
 .theme-dark .yd-calendar-more {
-  color: var(--yd-accent) !important;
-  background-color: transparent !important;
+  color: var(--yd-accent);
+  background-color: transparent;
 }
 
 /* ============================================================
@@ -2341,7 +2347,7 @@
   flex-direction: column;
   height: 100%;
   min-height: 0;
-  padding: 0 !important;
+  padding: 0;
   box-sizing: border-box;
 }
 
@@ -2564,9 +2570,9 @@
 
 /* Today tab：日历 + 每日事件合并卡片（与效果图一致） */
 .yd-calendar-mobile-card {
-  width: 100% !important;
+  width: 100%;
   max-width: 100%;
-  padding: 16px 16px 18px !important;
+  padding: 16px 16px 18px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
   border-radius: 10px;
   border: 1px solid var(--yd-section-border);
@@ -2580,7 +2586,7 @@
   grid-template-columns: unset;
   column-gap: 0;
   row-gap: 0;
-  padding-left: 0 !important;
+  padding-left: 0;
   align-items: stretch;
 }
 
@@ -2635,9 +2641,9 @@
 }
 
 .yd-calendar-more-mobile {
-  position: static !important;
-  right: auto !important;
-  top: auto !important;
+  position: static;
+  right: auto;
+  top: auto;
   flex-shrink: 0;
 }
 
@@ -2656,9 +2662,9 @@
 }
 
 .yd-moments-mobile-card {
-  width: 100% !important;
+  width: 100%;
   max-width: 100%;
-  padding: 18px 16px 20px !important;
+  padding: 18px 16px 20px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
   border-radius: 10px;
   border: 1px solid var(--yd-section-border);
