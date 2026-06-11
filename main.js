@@ -212,6 +212,11 @@ const I18N = {
     "calendar.contextPaste": "粘贴事件",
     "calendar.deleteConfirmTitle": "确认删除",
     "calendar.deleteConfirmMsg": "将删除事件 “{title}”",
+    "calendar.dailySummary": "Daily Summary",
+    "calendar.summaryConfirmTitle": "创建 Daily Summary",
+    "calendar.summaryConfirmMsg": "是否为 {date} 创建 Summary 笔记？\n笔记将包含当天 Daily Events，分隔线下留白用来撰写当日总结。",
+    "calendar.summaryCreated": "已创建 Daily Summary：{path}",
+    "calendar.summaryUpdated": "已更新 Daily Summary：{path}",
 
     "dataLog.viewMore": "查看历史",
     "dataLog.archiveTitle": "{month}{name}-数据记录",
@@ -256,10 +261,11 @@ const I18N = {
     "dailyMoments.title": "Daily Moments",
     "dailyMoments.note": "+ 记录此刻",
     "dailyMoments.placeholder": "记录此刻",
-    "dailyMoments.diary": "Daily Summary",
-    "dailyMoments.diaryConfirmTitle": "创建 Daily Summary",
-    "dailyMoments.diaryConfirmMsg": "是否为 {date} 创建 Daily Summary？\n笔记将包含当日的 Daily Moments，分隔线下留白用来撰写当日总结。",
-    "dailyMoments.diaryCreated": "已创建 Daily Summary：{path}",
+    "dailyMoments.diary": "Daily Moments",
+    "dailyMoments.diaryConfirmTitle": "创建 Daily Moments",
+    "dailyMoments.diaryConfirmMsg": "是否为 {date} 创建 Moments 笔记？\n笔记将包含当日的 Daily Moments，分隔线下留白用来补充内容。",
+    "dailyMoments.diaryCreated": "已创建 Daily Moments：{path}",
+    "dailyMoments.diaryUpdated": "已更新 Daily Moments：{path}",
     "dailyMoments.contextDelete": "删除时刻",
     "dailyMoments.deleteConfirm": "是否删除该时刻记录？",
 
@@ -378,6 +384,11 @@ const I18N = {
     "calendar.contextPaste": "Paste event",
     "calendar.deleteConfirmTitle": "Confirm delete",
     "calendar.deleteConfirmMsg": "Delete event \"{title}\"?",
+    "calendar.dailySummary": "Daily Summary",
+    "calendar.summaryConfirmTitle": "Create Daily Summary",
+    "calendar.summaryConfirmMsg": "Create a Summary note for {date}?\nIt will include today's Daily Events above the divider; the space below is yours to write.",
+    "calendar.summaryCreated": "Daily Summary created: {path}",
+    "calendar.summaryUpdated": "Daily Summary updated: {path}",
 
     "dataLog.viewMore": "View history",
     "dataLog.archiveTitle": "{month}-{name}-Data",
@@ -422,10 +433,11 @@ const I18N = {
     "dailyMoments.title": "Daily Moments",
     "dailyMoments.note": "+ Note the moment",
     "dailyMoments.placeholder": "Note the moment",
-    "dailyMoments.diary": "Daily Summary",
-    "dailyMoments.diaryConfirmTitle": "Create Daily Summary",
-    "dailyMoments.diaryConfirmMsg": "Create a Daily Summary for {date}?\nIt will list today's Daily Moments above the divider; the space below is yours to write.",
-    "dailyMoments.diaryCreated": "Daily Summary created: {path}",
+    "dailyMoments.diary": "Daily Moments",
+    "dailyMoments.diaryConfirmTitle": "Create Daily Moments",
+    "dailyMoments.diaryConfirmMsg": "Create a Moments note for {date}?\nIt will list today's Daily Moments above the divider; the space below is yours to add notes.",
+    "dailyMoments.diaryCreated": "Daily Moments created: {path}",
+    "dailyMoments.diaryUpdated": "Daily Moments updated: {path}",
     "dailyMoments.contextDelete": "Delete moment",
     "dailyMoments.deleteConfirm": "Delete this moment?",
 
@@ -1465,7 +1477,7 @@ const { makeId } = __yd_require("lib/store");
 const { ConfirmModal, FullPageModal } = __yd_require("lib/ui-modals");
 const { fitTextarea, ensureFocusInput, createIconButton } = __yd_require("lib/dom-utils");
 const { attachMobilePanelKeyboardScroll } = __yd_require("lib/mobile-composer-scroll");
-const { createArchiveNote, buildArchiveBody } = __yd_require("lib/archive");
+const { createArchiveNote, buildArchiveBody, ensureFolder, buildUniquePath } = __yd_require("lib/archive");
 
 const WEEK_LABELS_ZH = ["一", "二", "三", "四", "五", "六", "日"];
 const WEEK_LABELS_EN = ["M", "T", "W", "T", "F", "S", "S"];
@@ -1677,6 +1689,12 @@ function renderDayEvents(parent, ctx, eventOpts) {
     cls: "yd-events-date",
     text: opts.hideUndoneCount ? getDayHeader(date, lang) : `${getDayHeader(date, lang)} ${countText}`
   });
+  createIconButton(head, "notebook-pen", {
+    cls: "yd-section-icon yd-diary-btn",
+    label: t("calendar.dailySummary"),
+    fallback: "Daily Summary",
+    onClick: () => openDailySummary(ctx, dateKey)
+  });
 
   const list = parent.createDiv({ cls: "yd-events-list" });
   if (opts.mobileFooter) {
@@ -1810,6 +1828,47 @@ function renderInlineEditor(parent, initial, onCommit, onCancel) {
   };
   editor.oninput = () => fitTextarea(editor);
   editor.onblur = () => finish(editor.value.trim());
+}
+
+function buildDailySummaryBody(dateKey, events, t) {
+  const lines = events.map((event) => `- [${event.completed ? "x" : " "}] ${event.title || ""}`);
+  if (lines.length === 0) lines.push(`- ${t("common.empty")}`);
+  const bodyLines = [
+    `# ${dateKey} Daily Summary`,
+    "",
+    "## Daily Events",
+    "",
+    ...lines,
+    "",
+    "---",
+    "",
+    ""
+  ];
+  return bodyLines.join("\n");
+}
+
+async function openDailySummary(ctx, dateKey) {
+  const { plugin, settings, t } = ctx;
+  const folder = (settings.archiveFolder || "").trim();
+  const writeAndOpen = async () => {
+    if (folder) await ensureFolder(plugin.app, folder);
+    const events = getEventList(settings, dateKey);
+    const body = buildDailySummaryBody(dateKey, events, t);
+    const path = await buildUniquePath(plugin.app, folder, `${dateKey}-Summary`);
+    const file = await plugin.app.vault.create(path, body);
+    await plugin.app.workspace.getLeaf(true).openFile(file);
+    new Notice(t("calendar.summaryCreated", { path: file.path }));
+  };
+  const confirmModal = new ConfirmModal(plugin.app, {
+    title: t("calendar.summaryConfirmTitle"),
+    message: t("calendar.summaryConfirmMsg", { date: dateKey }),
+    confirmText: t("common.confirm"),
+    cancelText: t("common.cancel"),
+    onConfirm: async () => {
+      await writeAndOpen();
+    }
+  });
+  confirmModal.open();
 }
 
 function openEventMenu(evt, event, dateKey, ctx) {
@@ -3355,13 +3414,13 @@ __yd_modules["lib/sections/daily-moments"] = function(module, exports, require) 
 "use strict";
 
 const obsidian = require("obsidian");
-const { Notice, normalizePath, Menu } = obsidian;
+const { Notice, Menu } = obsidian;
 const { formatDateKey, formatTimeDisplay, nowTimeParts, pad2 } = __yd_require("lib/date-utils");
 const { makeId } = __yd_require("lib/store");
 const { fitTextarea, ensureFocusInput, createIconButton } = __yd_require("lib/dom-utils");
 const { attachMobilePanelKeyboardScroll } = __yd_require("lib/mobile-composer-scroll");
 const { ConfirmModal } = __yd_require("lib/ui-modals");
-const { ensureFolder } = __yd_require("lib/archive");
+const { ensureFolder, buildUniquePath } = __yd_require("lib/archive");
 
 function getMoments(settings, dateKey) {
   return (settings?.data?.dailyMoments?.[dateKey] || []).slice().sort(byTime);
@@ -3661,45 +3720,43 @@ function renderMomentComposer(parent, dateKey, existing, ctx, done, replaceTarge
   };
 }
 
+function buildDailyMomentsBody(dateKey, moments, settings, t) {
+  const lines = moments.map((m) => {
+    const time = formatTimeDisplay(m.hours, m.minutes, settings.timeFormat || "24");
+    return `- ${time} ${m.text || ""}`.trimEnd();
+  });
+  if (lines.length === 0) lines.push(`- ${t("common.empty")}`);
+  const bodyLines = [
+    `# ${dateKey} Daily Moments`,
+    "",
+    ...lines,
+    "",
+    "---",
+    "",
+    ""
+  ];
+  return bodyLines.join("\n");
+}
+
 async function openDiary(ctx, dateKey) {
   const { plugin, settings, t } = ctx;
   const folder = (settings.archiveFolder || "").trim();
-  const fileName = `${dateKey}-Summary.md`;
-  const fullPath = folder
-    ? normalizePath(`${folder}/${fileName}`)
-    : normalizePath(fileName);
-  const existing = plugin.app.vault.getAbstractFileByPath(fullPath);
-  if (existing) {
-    await plugin.app.workspace.getLeaf(true).openFile(existing);
-    return;
+  const writeAndOpen = async () => {
+    if (folder) await ensureFolder(plugin.app, folder);
+    const moments = getMoments(settings, dateKey);
+    const body = buildDailyMomentsBody(dateKey, moments, settings, t);
+    const path = await buildUniquePath(plugin.app, folder, `${dateKey}-Moments`);
+    const file = await plugin.app.vault.create(path, body);
+    await plugin.app.workspace.getLeaf(true).openFile(file);
+    new Notice(t("dailyMoments.diaryCreated", { path: file.path }));
   }
-  const moments = getMoments(settings, dateKey);
   const confirmModal = new ConfirmModal(plugin.app, {
     title: t("dailyMoments.diaryConfirmTitle"),
     message: t("dailyMoments.diaryConfirmMsg", { date: dateKey }),
     confirmText: t("common.confirm"),
     cancelText: t("common.cancel"),
     onConfirm: async () => {
-      if (folder) await ensureFolder(plugin.app, folder);
-      const lines = moments.map((m) => {
-        const time = formatTimeDisplay(m.hours, m.minutes, settings.timeFormat || "24");
-        return `- ${time} ${m.text || ""}`.trimEnd();
-      });
-      if (lines.length === 0) {
-        lines.push(`- ${t("common.empty")}`);
-      }
-      const body = [
-        `# ${dateKey} Daily Summary`,
-        "",
-        ...lines,
-        "",
-        "---",
-        "",
-        ""
-      ].join("\n");
-      const file = await plugin.app.vault.create(fullPath, body);
-      await plugin.app.workspace.getLeaf(true).openFile(file);
-      new Notice(t("dailyMoments.diaryCreated", { path: file.path }));
+      await writeAndOpen();
     }
   });
   confirmModal.open();
@@ -4037,7 +4094,8 @@ function openYearlyView(ctx) {
   const modal = new FullPageModal(plugin.app, {
     title: t("monthlyPlanner.title"),
     titleClass: "yd-planner-modal",
-    render: (root, instance) => renderYearlyView(root, ctx, instance)
+    render: (root, instance) => renderYearlyView(root, ctx, instance),
+    onClose: () => ctx.refresh()
   });
   modal.open();
 }

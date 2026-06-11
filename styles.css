@@ -532,7 +532,15 @@ body .workspace-leaf-content .view-content.yd-dashboard-host .yd-select,
   margin-bottom: 8px;
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-right: 26px;
   min-height: 32px;
+}
+
+.yd-events-date {
+  flex: 1;
+  min-width: 0;
 }
 
 .yd-events-list {
