@@ -1247,21 +1247,56 @@ function attachMobilePanelKeyboardScroll(wrap, focusEls) {
   if (panel) panel.classList.add(MOBILE_PANEL_KB_CLASS);
   else if (fullpage) fullpage.classList.add(FULLPAGE_KB_CLASS);
 
+  // Android: the app container is already resized above the keyboard, yet the view
+  // container still gets a keyboard-sized bottom padding, collapsing our layout to a
+  // sliver. Neutralise it for our own view, which manages keyboard scrolling itself.
+  const viewEl = wrap.closest(".yd-view-content--mobile");
+  const prevViewPad = viewEl ? viewEl.style.paddingBottom : "";
+  const dropViewKeyboardPad = () => {
+    if (viewEl && viewEl.style.paddingBottom !== "0px") viewEl.style.paddingBottom = "0px";
+  };
+
+  const usesVar = !!(panel || fullpage);
+  const basePad = usesVar
+    ? 0
+    : parseFloat(window.getComputedStyle(scrollEl).paddingBottom) || 0;
+
+  /** Extra scroll room reserved below the composer, grown only when needed. */
+  let extra = 0;
+  const setExtra = (px) => {
+    const next = Math.max(0, Math.round(px));
+    if (next === extra) return;
+    extra = next;
+    if (usesVar) scrollEl.style.setProperty("--yd-kb-extra", `${next}px`);
+    else scrollEl.style.paddingBottom = `${basePad + next}px`;
+  };
+
   const els = (focusEls || []).filter((e) => e && typeof e.getBoundingClientRect === "function");
 
   let vvDebounce = null;
   const align = () => {
     if (!wrap.isConnected) return;
+    dropViewKeyboardPad();
     const vv = window.visualViewport;
-    if (!vv) return;
-    const viewBottom = vv.offsetTop + vv.height;
+    // The visual viewport does not report the keyboard on Android/Obsidian, so the
+    // scroller's own bottom edge is the boundary that actually matters there.
+    const vvBottom = vv ? vv.offsetTop + vv.height : window.innerHeight;
+    const viewBottom = Math.min(vvBottom, scrollEl.getBoundingClientRect().bottom);
     const pad = 18;
     let bottom = wrap.getBoundingClientRect().bottom;
     for (const el of els) {
       bottom = Math.max(bottom, el.getBoundingClientRect().bottom);
     }
-    if (bottom <= viewBottom - pad) return;
-    scrollEl.scrollTop += bottom - viewBottom + pad;
+    const overflow = bottom - (viewBottom - pad);
+    if (overflow <= 0) {
+      // Composer already clear of the keyboard: give back the room it no longer needs,
+      // capped by the slack so the composer cannot be pushed back down.
+      if (extra > 0) setExtra(extra + overflow);
+      return;
+    }
+    const room = scrollEl.scrollHeight - scrollEl.clientHeight - scrollEl.scrollTop;
+    if (room < overflow) setExtra(extra + (overflow - room));
+    scrollEl.scrollTop += overflow;
   };
 
   const onVv = () => {
@@ -1285,8 +1320,18 @@ function attachMobilePanelKeyboardScroll(wrap, focusEls) {
   for (const el of els) {
     el.addEventListener("focus", onFocus);
   }
+
+  // On Android the keyboard shows up as a container resize, not a viewport event.
+  let ro = null;
+  if (typeof ResizeObserver === "function") {
+    ro = new ResizeObserver(() => requestAnimationFrame(align));
+    if (viewEl) ro.observe(viewEl);
+    const appEl = document.querySelector(".app-container");
+    if (appEl) ro.observe(appEl);
+  }
+
   requestAnimationFrame(align);
-  setTimeout(align, 280);
+  const settleTimers = [280, 600, 1000].map((ms) => setTimeout(align, ms));
 
   return () => {
     if (vv) {
@@ -1294,11 +1339,67 @@ function attachMobilePanelKeyboardScroll(wrap, focusEls) {
       vv.removeEventListener("scroll", onVv);
     }
     if (vvDebounce) clearTimeout(vvDebounce);
+    for (const timer of settleTimers) clearTimeout(timer);
+    if (ro) ro.disconnect();
     for (const el of els) {
       el.removeEventListener("focus", onFocus);
     }
+    if (usesVar) scrollEl.style.removeProperty("--yd-kb-extra");
+    else if (extra) scrollEl.style.paddingBottom = "";
+    if (viewEl) viewEl.style.paddingBottom = prevViewPad;
     if (panel) panel.classList.remove(MOBILE_PANEL_KB_CLASS);
     else if (fullpage) fullpage.classList.remove(FULLPAGE_KB_CLASS);
+  };
+}
+
+/**
+ * View-wide guard for the Android keyboard inset.
+ *
+ * The app container is already resized to sit above the keyboard, yet the view container
+ * additionally receives a keyboard-sized bottom padding, which collapses the dashboard to
+ * a sliver. Applies to every input in the view, including ones without their own composer
+ * scroll handler.
+ * @param {HTMLElement} host The `.yd-view-content--mobile` element
+ * @returns {() => void} cleanup
+ */
+function attachMobileViewKeyboardGuard(host) {
+  if (!Platform?.isMobile || typeof window === "undefined" || !host) {
+    return () => {};
+  }
+  const restore = host.style.paddingBottom;
+  let guarding = false;
+  const drop = () => {
+    if (!guarding) return;
+    if (host.style.paddingBottom !== "0px") host.style.paddingBottom = "0px";
+  };
+  const isField = (el) =>
+    el instanceof Element && el.matches("input:not([type=checkbox]), textarea, select");
+  const onFocusIn = (e) => {
+    if (!isField(e.target)) return;
+    guarding = true;
+    drop();
+  };
+  const onFocusOut = () => {
+    window.setTimeout(() => {
+      if (isField(document.activeElement) && host.contains(document.activeElement)) return;
+      guarding = false;
+      host.style.paddingBottom = restore;
+    }, 50);
+  };
+  host.addEventListener("focusin", onFocusIn);
+  host.addEventListener("focusout", onFocusOut);
+  let ro = null;
+  if (typeof ResizeObserver === "function") {
+    ro = new ResizeObserver(() => drop());
+    ro.observe(host);
+    const appEl = document.querySelector(".app-container");
+    if (appEl) ro.observe(appEl);
+  }
+  return () => {
+    host.removeEventListener("focusin", onFocusIn);
+    host.removeEventListener("focusout", onFocusOut);
+    if (ro) ro.disconnect();
+    host.style.paddingBottom = restore;
   };
 }
 
@@ -1336,6 +1437,7 @@ function attachMobileFullpageDelegatedInputScroll(contentRoot, modal, selector) 
 
 module.exports = {
   attachMobilePanelKeyboardScroll,
+  attachMobileViewKeyboardGuard,
   attachMobileFullpageDelegatedInputScroll,
   MOBILE_PANEL_KB_CLASS,
   FULLPAGE_KB_CLASS
@@ -2097,6 +2199,7 @@ const {
 const { makeId } = __yd_require("lib/store");
 const { ConfirmModal, FullPageModal } = __yd_require("lib/ui-modals");
 const { ensureFocusInput, createIconButton } = __yd_require("lib/dom-utils");
+const { attachMobilePanelKeyboardScroll } = __yd_require("lib/mobile-composer-scroll");
 const { createArchiveNote, buildArchiveBody } = __yd_require("lib/archive");
 
 const NAME_DISPLAY_LIMIT = 4;
@@ -2175,10 +2278,12 @@ function renderDataLogRow(parent, item, value, dateKey, ctx) {
     input.onclick = (evt) => evt.stopPropagation();
     input.value = value || "";
     ensureFocusInput(input);
+    const keyboardDispose = attachMobilePanelKeyboardScroll(row, [input]);
     let committed = false;
     const commit = async () => {
       if (committed) return;
       committed = true;
+      keyboardDispose();
       setValue(ctx.settings, item.id, dateKey, input.value.trim());
       await ctx.save();
       ctx.refresh();
@@ -2189,6 +2294,7 @@ function renderDataLogRow(parent, item, value, dateKey, ctx) {
         commit();
       } else if (e.key === "Escape") {
         e.preventDefault();
+        keyboardDispose();
         ctx.refresh();
       }
     };
@@ -2722,6 +2828,7 @@ function renderTaskComposer(parent, ctx, done, moreAction) {
   const cancel = () => {
     if (committed) return;
     committed = true;
+    keyboardDispose();
     wrap.remove();
     parent.removeClass("yd-section--composer-open");
     done?.();
@@ -2741,9 +2848,11 @@ function renderTaskComposer(parent, ctx, done, moreAction) {
   editor.placeholder = t("taskBox.placeholderTask");
   ensureFocusInput(editor);
   fitTextarea(editor);
+  const keyboardDispose = attachMobilePanelKeyboardScroll(wrap, [editor, select]);
   const finish = async () => {
     if (committed) return;
     committed = true;
+    keyboardDispose();
     const value = editor.value.trim();
     const boxId = select.value;
     wrap.remove();
@@ -4896,6 +5005,7 @@ const momentsSection = __yd_require("lib/sections/daily-moments");
 const plannerSection = __yd_require("lib/sections/monthly-planner");
 const quickEntriesSection = __yd_require("lib/sections/quick-entries");
 const mobileDashboard = __yd_require("lib/mobile-dashboard");
+const mobileComposerScroll = __yd_require("lib/mobile-composer-scroll");
 
 const { VIEW_TYPE, ICON_ID, SECTION_LIMITS, DEFAULT_SETTINGS } = constants;
 
@@ -4972,6 +5082,7 @@ class YoriDashboardView extends ItemView {
     };
     this.clipboard = {};
     this._renderHandle = null;
+    this._keyboardGuard = null;
   }
 
   getViewType() {
@@ -4992,6 +5103,10 @@ class YoriDashboardView extends ItemView {
 
   async onClose() {
     if (this._renderHandle) cancelAnimationFrame(this._renderHandle);
+    if (this._keyboardGuard) {
+      this._keyboardGuard();
+      this._keyboardGuard = null;
+    }
     this.containerEl.empty();
   }
 
@@ -5039,6 +5154,11 @@ class YoriDashboardView extends ItemView {
     host.addClass("yd-view-content");
     if (Platform.isMobile) host.addClass("yd-view-content--mobile");
     else host.removeClass("yd-view-content--mobile");
+
+    if (this._keyboardGuard) this._keyboardGuard();
+    this._keyboardGuard = Platform.isMobile
+      ? mobileComposerScroll.attachMobileViewKeyboardGuard(host)
+      : null;
 
     const root = host.createDiv({ cls: "yd-root" });
     const ctx = this.buildContext();

@@ -25,6 +25,7 @@ const momentsSection = require("../lib/sections/daily-moments");
 const plannerSection = require("../lib/sections/monthly-planner");
 const quickEntriesSection = require("../lib/sections/quick-entries");
 const mobileDashboard = require("../lib/mobile-dashboard");
+const mobileComposerScroll = require("../lib/mobile-composer-scroll");
 
 const { VIEW_TYPE, ICON_ID, SECTION_LIMITS, DEFAULT_SETTINGS } = constants;
 
@@ -101,6 +102,7 @@ class YoriDashboardView extends ItemView {
     };
     this.clipboard = {};
     this._renderHandle = null;
+    this._keyboardGuard = null;
   }
 
   getViewType() {
@@ -121,6 +123,10 @@ class YoriDashboardView extends ItemView {
 
   async onClose() {
     if (this._renderHandle) cancelAnimationFrame(this._renderHandle);
+    if (this._keyboardGuard) {
+      this._keyboardGuard();
+      this._keyboardGuard = null;
+    }
     this.containerEl.empty();
   }
 
@@ -168,6 +174,11 @@ class YoriDashboardView extends ItemView {
     host.addClass("yd-view-content");
     if (Platform.isMobile) host.addClass("yd-view-content--mobile");
     else host.removeClass("yd-view-content--mobile");
+
+    if (this._keyboardGuard) this._keyboardGuard();
+    this._keyboardGuard = Platform.isMobile
+      ? mobileComposerScroll.attachMobileViewKeyboardGuard(host)
+      : null;
 
     const root = host.createDiv({ cls: "yd-root" });
     const ctx = this.buildContext();

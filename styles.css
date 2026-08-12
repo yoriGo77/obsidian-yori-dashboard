@@ -543,6 +543,15 @@ body .workspace-leaf-content .view-content.yd-dashboard-host .yd-select,
   min-width: 0;
 }
 
+/* desktop: date / rows line up with the task box group title */
+.yd-calendar-body:not(.yd-calendar-body--mobile-stack) .yd-events-head {
+  padding-left: 10px;
+}
+
+.yd-calendar-body:not(.yd-calendar-body--mobile-stack) .yd-events-list .yd-event-row {
+  padding-left: 10px;
+}
+
 .yd-events-list {
   display: flex;
   flex-direction: column;
@@ -779,7 +788,7 @@ body .workspace-leaf-content .view-content.yd-dashboard-host .yd-select,
 }
 
 .yd-section-moments .yd-add-button {
-  padding-left: 108px;
+  padding-left: 28px;
 }
 
 /** dashboard ??? +Add ???"+"?????"??"????????? / ??? */
@@ -792,7 +801,7 @@ body .workspace-leaf-content .view-content.yd-dashboard-host .yd-select,
 }
 
 .yd-section-planner > .yd-add-button {
-  padding-left: 26px;
+  padding-left: 28px;
 }
 
 .yd-section-taskbox .yd-section-footer,
@@ -2963,15 +2972,23 @@ body.theme-dark .workspace-leaf-content .view-content.yd-dashboard-host .yd-sele
   padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px) + 80px);
 }
 
+/* Cards must keep their natural height: as a flex column the panel would otherwise
+   squeeze them (and clip their inner scrollers) when the keyboard shortens the view. */
+.yd-mobile-panel > * {
+  flex-shrink: 0;
+}
+
 /* ??????????????????? JS class ??? */
+/* While composing, drop the idle bottom spacer: the only room still needed is
+   whatever the keyboard actually covers, which JS measures into --yd-kb-extra. */
 .yd-mobile-panel.yd-mobile-panel--keyboard-composer {
   padding-bottom: calc(
-    28px + env(safe-area-inset-bottom, 0px) + 80px + min(36dvh, 300px)
+    28px + env(safe-area-inset-bottom, 0px) + var(--yd-kb-extra, 0px)
   );
 }
 
 .yd-fullpage-content.yd-fullpage-content--keyboard-composer {
-  padding-bottom: min(40dvh, 320px);
+  padding-bottom: calc(4px + var(--yd-kb-extra, 0px));
 }
 
 .yd-mobile-tab-empty {
@@ -3166,8 +3183,10 @@ body.theme-dark .workspace-leaf-content .view-content.yd-dashboard-host .yd-sele
   letter-spacing: 0.02em;
 }
 
+/* vh, not dvh: the software keyboard shrinks the dynamic viewport, which would
+   collapse this list and hide rows the moment the composer is focused. */
 .yd-events-list--mobile {
-  max-height: min(42dvh, 280px);
+  max-height: min(42vh, 280px);
 }
 
 .yd-calendar-mobile-events-footer {
@@ -3213,7 +3232,7 @@ body.theme-dark .workspace-leaf-content .view-content.yd-dashboard-host .yd-sele
 }
 
 .yd-moments-list--mobile {
-  max-height: min(38dvh, 360px);
+  max-height: min(38vh, 360px);
 }
 
 .theme-dark .yd-calendar-mobile-card,
