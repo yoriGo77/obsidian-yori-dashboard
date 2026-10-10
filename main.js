@@ -260,6 +260,7 @@ const I18N = {
     "taskBox.clearCompleted": "清理已完成",
     "taskBox.clearCompletedConfirm": "将永久删除「{name}」下所有已完成的任务，是否继续？",
     "taskBox.empty": "暂无任务",
+    "taskBox.noBox": "未创建盒子",
 
     "checkIn.title": "打卡",
     "checkIn.button": "打卡",
@@ -355,7 +356,7 @@ const I18N = {
     "note.settingsDesc": "设置便签文字的显示效果",
     "note.textColor": "文字颜色",
     "note.textSize": "文字大小",
-    "note.tips": "Tips: 在您输入便签内容时，可 shift + enter 换行"
+    "note.placeholderMobile": "输入内容"
   },
   en: {
     "ribbon.open": "Open Yori Dashboard",
@@ -443,6 +444,7 @@ const I18N = {
     "taskBox.clearCompleted": "Clear completed",
     "taskBox.clearCompletedConfirm": "Permanently delete all completed tasks under “{name}”. Continue?",
     "taskBox.empty": "No tasks",
+    "taskBox.noBox": "No box created",
 
     "checkIn.title": "Check-in",
     "checkIn.button": "Check",
@@ -538,7 +540,7 @@ const I18N = {
     "note.settingsDesc": "Adjust how the note text looks",
     "note.textColor": "Text color",
     "note.textSize": "Text size",
-    "note.tips": "Tips: press shift + enter to start a new line while typing"
+    "note.placeholderMobile": "Type your note"
   }
 };
 
@@ -2886,7 +2888,7 @@ function renderTaskComposer(parent, ctx, done, moreAction) {
   const { settings, t } = ctx;
   const boxes = getBoxes(settings);
   if (boxes.length === 0) {
-    new Notice(t("taskBox.empty"));
+    new Notice(t("taskBox.noBox"));
     done?.();
     return;
   }
@@ -4798,10 +4800,12 @@ module.exports = {
 __yd_modules["lib/sections/sticky-note"] = function(module, exports, require) {
 "use strict";
 
+const { Platform } = require("obsidian");
 const { PALETTE, NOTE_FONT_SIZES, DEFAULT_NOTE_SIZE, DEFAULT_NOTE_COLOR } = __yd_require("lib/constants");
 const { FullPageModal } = __yd_require("lib/ui-modals");
 const { fitTextarea, createIconButton } = __yd_require("lib/dom-utils");
 const { formatDateKey } = __yd_require("lib/date-utils");
+const { attachMobilePanelKeyboardScroll } = __yd_require("lib/mobile-composer-scroll");
 
 const LINE_HEIGHT = 1.6;
 
@@ -4853,7 +4857,9 @@ function renderStickyNote(parent, ctx, kind) {
     if (body.querySelector("textarea")) return;
     body.empty();
     const editor = body.createEl("textarea", { cls: "yd-note-editor" });
-    editor.placeholder = t("note.placeholder");
+    // Phones have no Shift+Enter: Enter inserts a line break and a button confirms instead.
+    const isMobile = !!Platform?.isMobile;
+    editor.placeholder = t(isMobile ? "note.placeholderMobile" : "note.placeholder");
     editor.value = currentText();
     editor.rows = 1;
     const minHeight = Math.round(note.size * LINE_HEIGHT);
@@ -4864,10 +4870,27 @@ function renderStickyNote(parent, ctx, kind) {
       editor.setSelectionRange(end, end);
     });
 
+    let actions = null;
+    if (isMobile) {
+      actions = box.createDiv({ cls: "yd-note-actions" });
+      const confirmBtn = actions.createEl("button", {
+        cls: "yd-add-button yd-note-confirm",
+        text: t("common.confirm"),
+        attr: { type: "button" }
+      });
+      // Keep focus in the editor so the tap is a click, not a blur that removes the button first.
+      confirmBtn.addEventListener("mousedown", (e) => e.preventDefault());
+      confirmBtn.addEventListener("pointerdown", (e) => e.preventDefault());
+      confirmBtn.onclick = () => finish(true);
+    }
+
+    const disposeKeyboard = attachMobilePanelKeyboardScroll(box, [editor]);
     let done = false;
     const finish = async (save) => {
       if (done) return;
       done = true;
+      disposeKeyboard();
+      if (actions) actions.remove();
       if (save) {
         const next = editor.value.replace(/\s+$/, "");
         if (next !== currentText()) {
@@ -4883,6 +4906,7 @@ function renderStickyNote(parent, ctx, kind) {
     editor.onkeydown = (e) => {
       // Ignore Enter that merely confirms an IME composition (Chinese/Japanese input).
       if (e.isComposing || e.keyCode === 229) return;
+      if (isMobile) return;
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         finish(true);
@@ -4985,8 +5009,6 @@ function renderNoteSettings(root, ctx, note, modal) {
     note.size = next;
     await ctx.save();
   };
-
-  root.createDiv({ cls: "yd-note-tips", text: t("note.tips") });
 
   const actions = root.createDiv({ cls: "yd-modal-actions yd-modal-actions-end" });
   const okBtn = actions.createEl("button", { cls: "yd-modal-confirm", text: t("common.confirm") });
@@ -5119,6 +5141,7 @@ const checkInSection = __yd_require("lib/sections/check-in");
 const momentsSection = __yd_require("lib/sections/daily-moments");
 const plannerSection = __yd_require("lib/sections/monthly-planner");
 const quickEntriesSection = __yd_require("lib/sections/quick-entries");
+const stickyNoteSection = __yd_require("lib/sections/sticky-note");
 const { searchMarkdownNotes } = __yd_require("lib/note-search");
 
 function renderTabBar(parent, ctx) {
@@ -5152,6 +5175,10 @@ function tabEmpty(panel, ctx) {
 function renderToday(panel, ctx) {
   const { settings } = ctx;
   calendarSection.render(panel, ctx, { layout: "mobileCard" });
+  // Sticky notes are opt-in (hidden unless switched on in the plugin settings).
+  if (settings.showSection?.noteSmall === true) {
+    stickyNoteSection.renderSmall(panel, ctx);
+  }
   if (settings.showSection?.dailyMoments !== false) {
     momentsSection.render(panel, ctx, { layout: "mobileCard" });
   }
@@ -5174,6 +5201,10 @@ function renderTrackers(panel, ctx) {
 function renderTasks(panel, ctx) {
   const { settings } = ctx;
   let any = false;
+  if (settings.showSection?.noteLarge === true) {
+    stickyNoteSection.renderLarge(panel, ctx);
+    any = true;
+  }
   if (settings.showSection?.taskBox !== false) {
     taskBoxSection.render(panel, ctx);
     any = true;
@@ -5321,17 +5352,53 @@ class YoriDashboardPlugin extends Plugin {
   }
 
   onunload() {
+    if (this._externalRetry) window.clearTimeout(this._externalRetry);
     /* Obsidian 会在插件 unload 时自动清理已注册的 view，
        不需要也不应再调用 detachLeavesOfType（会破坏用户布局）。 */
   }
 
   async loadSettings() {
     const raw = await this.loadData();
+    // Normalise in memory only. Writing back at startup could overwrite a newer data.json
+    // that sync has not delivered yet; the first real edit persists the normalised data.
     this.settings = storeUtils.normalizeSettings(raw);
-    if (!this._migrated) {
-      this._migrated = true;
-      await this.saveSettings();
+  }
+
+  /**
+   * Called by Obsidian when data.json was changed outside this session (e.g. Sync pulled a
+   * newer copy from another device): reload it and refresh open dashboards.
+   */
+  async onExternalSettingsChange() {
+    await this.syncExternalSettings();
+  }
+
+  /** The user is typing, or a dashboard dialog is open: swapping the data now would clobber it. */
+  isUserBusy() {
+    if (document.querySelector(".yd-fullpage-modal")) return true;
+    const active = document.activeElement;
+    if (!active || !active.closest) return false;
+    const isField = active.matches("input, textarea, select");
+    return isField && !!active.closest(".yd-dashboard-host");
+  }
+
+  async syncExternalSettings() {
+    if (this._externalRetry) {
+      window.clearTimeout(this._externalRetry);
+      this._externalRetry = null;
     }
+    if (this.isUserBusy()) {
+      this._externalRetry = window.setTimeout(() => {
+        this._externalRetry = null;
+        this.syncExternalSettings();
+      }, 2000);
+      return;
+    }
+    const raw = await this.loadData();
+    if (raw === null || raw === undefined) return;
+    const next = storeUtils.normalizeSettings(raw);
+    if (JSON.stringify(next) === JSON.stringify(this.settings)) return;
+    this.settings = next;
+    this.refreshAllViews();
   }
 
   async saveSettings() {

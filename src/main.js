@@ -57,17 +57,53 @@ class YoriDashboardPlugin extends Plugin {
   }
 
   onunload() {
+    if (this._externalRetry) window.clearTimeout(this._externalRetry);
     /* Obsidian 会在插件 unload 时自动清理已注册的 view，
        不需要也不应再调用 detachLeavesOfType（会破坏用户布局）。 */
   }
 
   async loadSettings() {
     const raw = await this.loadData();
+    // Normalise in memory only. Writing back at startup could overwrite a newer data.json
+    // that sync has not delivered yet; the first real edit persists the normalised data.
     this.settings = storeUtils.normalizeSettings(raw);
-    if (!this._migrated) {
-      this._migrated = true;
-      await this.saveSettings();
+  }
+
+  /**
+   * Called by Obsidian when data.json was changed outside this session (e.g. Sync pulled a
+   * newer copy from another device): reload it and refresh open dashboards.
+   */
+  async onExternalSettingsChange() {
+    await this.syncExternalSettings();
+  }
+
+  /** The user is typing, or a dashboard dialog is open: swapping the data now would clobber it. */
+  isUserBusy() {
+    if (document.querySelector(".yd-fullpage-modal")) return true;
+    const active = document.activeElement;
+    if (!active || !active.closest) return false;
+    const isField = active.matches("input, textarea, select");
+    return isField && !!active.closest(".yd-dashboard-host");
+  }
+
+  async syncExternalSettings() {
+    if (this._externalRetry) {
+      window.clearTimeout(this._externalRetry);
+      this._externalRetry = null;
     }
+    if (this.isUserBusy()) {
+      this._externalRetry = window.setTimeout(() => {
+        this._externalRetry = null;
+        this.syncExternalSettings();
+      }, 2000);
+      return;
+    }
+    const raw = await this.loadData();
+    if (raw === null || raw === undefined) return;
+    const next = storeUtils.normalizeSettings(raw);
+    if (JSON.stringify(next) === JSON.stringify(this.settings)) return;
+    this.settings = next;
+    this.refreshAllViews();
   }
 
   async saveSettings() {

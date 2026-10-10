@@ -3373,8 +3373,19 @@ body.theme-dark .workspace-leaf-content .view-content.yd-dashboard-host .yd-sele
   box-shadow: none;
 }
 
-.yd-note-tips {
-  font-size: 13px;
-  color: #c9c1b3;
-  margin-bottom: 10px;
+.yd-note-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 6px;
+}
+
+.yd-note-actions .yd-note-confirm {
+  align-self: auto;
+  margin-top: 0;
+  padding: 6px 4px 6px 12px;
+}
+
+/* sticky notes on the mobile pages: slightly tighter inner padding */
+.yd-mobile-panel .yd-note-box {
+  padding: 34px 16px 16px;
 }
