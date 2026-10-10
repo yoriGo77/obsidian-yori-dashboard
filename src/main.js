@@ -24,6 +24,7 @@ const checkInSection = require("../lib/sections/check-in");
 const momentsSection = require("../lib/sections/daily-moments");
 const plannerSection = require("../lib/sections/monthly-planner");
 const quickEntriesSection = require("../lib/sections/quick-entries");
+const stickyNoteSection = require("../lib/sections/sticky-note");
 const mobileDashboard = require("../lib/mobile-dashboard");
 const mobileComposerScroll = require("../lib/mobile-composer-scroll");
 
@@ -200,15 +201,23 @@ class YoriDashboardView extends ItemView {
       checkIn: () => checkInSection.render(colLeft, ctx),
       taskBox: () => taskBoxSection.render(colRight, ctx),
       dailyMoments: () => momentsSection.render(colRight, ctx),
-      monthlyPlanner: () => plannerSection.render(colRight, ctx)
+      monthlyPlanner: () => plannerSection.render(colRight, ctx),
+      noteSmall: () => stickyNoteSection.renderSmall(colLeft, ctx),
+      noteLarge: () => stickyNoteSection.renderLarge(colRight, ctx)
     };
 
-    const order = settings.sectionOrder || { groupA: ["dataLog", "checkIn"], groupB: ["taskBox", "dailyMoments", "monthlyPlanner"] };
+    // The sticky notes are opt-in: hidden unless explicitly switched on.
+    const isShown = (key) =>
+      key === "noteSmall" || key === "noteLarge"
+        ? settings.showSection?.[key] === true
+        : settings.showSection?.[key] !== false;
+
+    const order = settings.sectionOrder || DEFAULT_SETTINGS.sectionOrder;
     (order.groupA || []).forEach((key) => {
-      if (settings.showSection?.[key] !== false && renderers[key]) renderers[key]();
+      if (isShown(key) && renderers[key]) renderers[key]();
     });
     (order.groupB || []).forEach((key) => {
-      if (settings.showSection?.[key] !== false && renderers[key]) renderers[key]();
+      if (isShown(key) && renderers[key]) renderers[key]();
     });
 
     quickEntriesSection.renderSide(colLeft, "left", ctx);
@@ -312,7 +321,9 @@ class YoriDashboardSettingTab extends PluginSettingTab {
       checkIn: "settings.section.checkIn",
       taskBox: "settings.section.taskBox",
       dailyMoments: "settings.section.dailyMoments",
-      monthlyPlanner: "settings.section.monthlyPlanner"
+      monthlyPlanner: "settings.section.monthlyPlanner",
+      noteSmall: "settings.section.noteSmall",
+      noteLarge: "settings.section.noteLarge"
     };
 
     const renderGroup = (groupKey) => {
@@ -331,7 +342,11 @@ class YoriDashboardSettingTab extends PluginSettingTab {
         const toggleWrap = row.createDiv({ cls: "yd-section-order-toggle" });
         const toggle = new ToggleComponent(toggleWrap);
         toggle
-          .setValue(this.plugin.settings.showSection[key] !== false)
+          .setValue(
+            key === "noteSmall" || key === "noteLarge"
+              ? this.plugin.settings.showSection[key] === true
+              : this.plugin.settings.showSection[key] !== false
+          )
           .onChange(async (value) => {
             this.plugin.settings.showSection[key] = value;
             await this.plugin.saveSettings();

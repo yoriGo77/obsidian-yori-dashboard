@@ -48,6 +48,12 @@ const PALETTE = [
   { name: "light-orange", color: "#e8c284" }
 ];
 
+/** Sticky note: six selectable font sizes; 17 matches the other modules' titles. */
+const NOTE_FONT_SIZES = [13, 15, 17, 20, 24, 28];
+const DEFAULT_NOTE_SIZE = 17;
+const DEFAULT_NOTE_COLOR = "#c4b6a0";
+const NOTE_KINDS = ["small", "large"];
+
 const NOTE_OPEN_MODES = ["smart", "newTab", "replace"];
 const TIME_FORMATS = ["12", "24"];
 const LANGUAGES = ["zh", "en"];
@@ -82,8 +88,8 @@ const DEFAULT_QUICK_ENTRIES_LEFT = [];
 const DEFAULT_QUICK_ENTRIES_RIGHT = [];
 
 const DEFAULT_SECTION_ORDER = {
-  groupA: ["dataLog", "checkIn"],
-  groupB: ["taskBox", "dailyMoments", "monthlyPlanner"]
+  groupA: ["noteSmall", "dataLog", "checkIn"],
+  groupB: ["noteLarge", "taskBox", "dailyMoments", "monthlyPlanner"]
 };
 
 const DEFAULT_SETTINGS = {
@@ -100,11 +106,13 @@ const DEFAULT_SETTINGS = {
     checkIn: true,
     dailyMoments: true,
     monthlyPlanner: true,
-    quickEntries: true
+    quickEntries: true,
+    noteSmall: false,
+    noteLarge: false
   },
   sectionOrder: {
-    groupA: ["dataLog", "checkIn"],
-    groupB: ["taskBox", "dailyMoments", "monthlyPlanner"]
+    groupA: ["noteSmall", "dataLog", "checkIn"],
+    groupB: ["noteLarge", "taskBox", "dailyMoments", "monthlyPlanner"]
   },
   data: {
     dailyEvents: {},
@@ -125,6 +133,10 @@ const DEFAULT_SETTINGS = {
     quickEntries: {
       left: DEFAULT_QUICK_ENTRIES_LEFT,
       right: DEFAULT_QUICK_ENTRIES_RIGHT
+    },
+    notes: {
+      small: { texts: {}, color: DEFAULT_NOTE_COLOR, size: DEFAULT_NOTE_SIZE },
+      large: { texts: {}, color: DEFAULT_NOTE_COLOR, size: DEFAULT_NOTE_SIZE }
     }
   }
 };
@@ -140,6 +152,10 @@ module.exports = {
   CARD_BG,
   MUTED_TEXT,
   PALETTE,
+  NOTE_FONT_SIZES,
+  DEFAULT_NOTE_SIZE,
+  DEFAULT_NOTE_COLOR,
+  NOTE_KINDS,
   NOTE_OPEN_MODES,
   TIME_FORMATS,
   LANGUAGES,
@@ -328,7 +344,18 @@ const I18N = {
     "settings.section.calendar": "日历与每日事件",
     "settings.section.dataLog": "数据记录",
     "settings.section.checkIn": "打卡",
-    "settings.section.quickEntries": "快捷入口"
+    "settings.section.quickEntries": "快捷入口",
+    "settings.section.noteSmall": "小便签",
+    "settings.section.noteLarge": "大便签",
+
+    "note.placeholder": "shift+enter 换行",
+    "note.empty": "添加便签",
+    "note.settings": "便签设置",
+    "note.settingsTitle": "便签文字设置",
+    "note.settingsDesc": "设置便签文字的显示效果",
+    "note.textColor": "文字颜色",
+    "note.textSize": "文字大小",
+    "note.tips": "Tips: 在您输入便签内容时，可 shift + enter 换行"
   },
   en: {
     "ribbon.open": "Open Yori Dashboard",
@@ -500,7 +527,18 @@ const I18N = {
     "settings.section.calendar": "Calendar & Events",
     "settings.section.dataLog": "Data Log",
     "settings.section.checkIn": "Check-in",
-    "settings.section.quickEntries": "Quick Links"
+    "settings.section.quickEntries": "Quick Links",
+    "settings.section.noteSmall": "Small Note",
+    "settings.section.noteLarge": "Large Note",
+
+    "note.placeholder": "shift+enter for a new line",
+    "note.empty": "Add a note",
+    "note.settings": "Note settings",
+    "note.settingsTitle": "Note Text Settings",
+    "note.settingsDesc": "Adjust how the note text looks",
+    "note.textColor": "Text color",
+    "note.textSize": "Text size",
+    "note.tips": "Tips: press shift + enter to start a new line while typing"
   }
 };
 
@@ -699,8 +737,13 @@ const {
   DEFAULT_DATA_LOG_ITEMS,
   DEFAULT_TASK_BOXES,
   DEFAULT_CHECKIN_ITEMS,
-  DEFAULT_SECTION_ORDER
+  DEFAULT_SECTION_ORDER,
+  NOTE_FONT_SIZES,
+  DEFAULT_NOTE_SIZE,
+  DEFAULT_NOTE_COLOR,
+  NOTE_KINDS
 } = __yd_require("lib/constants");
+const { formatDateKey } = __yd_require("lib/date-utils");
 
 function deepClone(value) {
   if (value === null || typeof value !== "object") return value;
@@ -894,6 +937,34 @@ function normalizeQuickEntries(data) {
   };
 }
 
+function normalizeNotes(data) {
+  const block = isPlainObject(data) ? data : {};
+  const out = {};
+  NOTE_KINDS.forEach((kind) => {
+    const note = isPlainObject(block[kind]) ? block[kind] : {};
+    const texts = {};
+    if (isPlainObject(note.texts)) {
+      for (const dateKey of Object.keys(note.texts)) {
+        const value = note.texts[dateKey];
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dateKey) && typeof value === "string" && value) {
+          texts[dateKey] = value;
+        }
+      }
+    }
+    // Early builds kept a single undated text: keep it by filing it under today.
+    if (typeof note.text === "string" && note.text) {
+      const today = formatDateKey(new Date());
+      if (!texts[today]) texts[today] = note.text;
+    }
+    out[kind] = {
+      texts,
+      color: typeof note.color === "string" && /^#[0-9a-f]{6}$/i.test(note.color) ? note.color : DEFAULT_NOTE_COLOR,
+      size: NOTE_FONT_SIZES.includes(note.size) ? note.size : DEFAULT_NOTE_SIZE
+    };
+  });
+  return out;
+}
+
 function normalizeSectionOrder(raw) {
   const block = isPlainObject(raw) ? raw : {};
   function pickGroup(key) {
@@ -906,8 +977,9 @@ function normalizeSectionOrder(raw) {
         seen.add(id);
       }
     });
-    allowed.forEach((id) => {
-      if (!seen.has(id)) out.push(id);
+    // Sections missing from a saved order (e.g. added by an update) go in at their default slot.
+    allowed.forEach((id, defaultIdx) => {
+      if (!seen.has(id)) out.splice(Math.min(defaultIdx, out.length), 0, id);
     });
     return out;
   }
@@ -927,6 +999,7 @@ function normalizeSettings(raw) {
   merged.data.dailyMoments = normalizeDailyMoments(merged.data.dailyMoments);
   merged.data.monthlyPlanner = normalizeMonthlyPlanner(merged.data.monthlyPlanner);
   merged.data.quickEntries = normalizeQuickEntries(merged.data.quickEntries);
+  merged.data.notes = normalizeNotes(merged.data.notes);
   merged.sectionOrder = normalizeSectionOrder(merged.sectionOrder);
   merged.showSection = isPlainObject(merged.showSection)
     ? { ...DEFAULT_SETTINGS.showSection, ...merged.showSection }
@@ -954,6 +1027,7 @@ module.exports = {
   normalizeDailyMoments,
   normalizeMonthlyPlanner,
   normalizeQuickEntries,
+  normalizeNotes,
   normalizeSectionOrder,
   makeId
 };
@@ -4721,6 +4795,216 @@ module.exports = {
 
 };
 
+__yd_modules["lib/sections/sticky-note"] = function(module, exports, require) {
+"use strict";
+
+const { PALETTE, NOTE_FONT_SIZES, DEFAULT_NOTE_SIZE, DEFAULT_NOTE_COLOR } = __yd_require("lib/constants");
+const { FullPageModal } = __yd_require("lib/ui-modals");
+const { fitTextarea, createIconButton } = __yd_require("lib/dom-utils");
+const { formatDateKey } = __yd_require("lib/date-utils");
+
+const LINE_HEIGHT = 1.6;
+
+/**
+ * `small` lives in the left column, `large` in the right one.
+ * Text is stored per date (`texts[dateKey]`); colour and size are shared by all dates.
+ */
+function getNote(settings, kind) {
+  if (!settings.data.notes) settings.data.notes = {};
+  const notes = settings.data.notes;
+  if (!notes[kind]) notes[kind] = { texts: {}, color: DEFAULT_NOTE_COLOR, size: DEFAULT_NOTE_SIZE };
+  if (!notes[kind].texts) notes[kind].texts = {};
+  return notes[kind];
+}
+
+function applyTextStyle(el, note) {
+  el.style.fontSize = `${note.size}px`;
+  el.style.color = note.color;
+}
+
+function renderStickyNote(parent, ctx, kind) {
+  const { settings, t } = ctx;
+  const note = getNote(settings, kind);
+  const dateKey = ctx.state.focusDateKey || formatDateKey(new Date());
+  const currentText = () => note.texts[dateKey] || "";
+
+  const wrap = parent.createDiv({ cls: `yd-section yd-section-note yd-section-note--${kind}` });
+  const box = wrap.createDiv({ cls: "yd-note-box" });
+  createIconButton(box, "sliders-horizontal", {
+    cls: "yd-section-icon yd-note-settings-btn",
+    label: t("note.settings"),
+    fallback: "≡",
+    onClick: () => openNoteSettings(ctx, kind)
+  });
+
+  const body = box.createDiv({ cls: "yd-note-body" });
+  applyTextStyle(body, note);
+
+  const showText = () => {
+    body.empty();
+    const view = body.createDiv({
+      cls: currentText() ? "yd-note-text" : "yd-note-text is-empty",
+      text: currentText() || t("note.empty")
+    });
+    view.onclick = startEdit;
+  };
+
+  function startEdit() {
+    if (body.querySelector("textarea")) return;
+    body.empty();
+    const editor = body.createEl("textarea", { cls: "yd-note-editor" });
+    editor.placeholder = t("note.placeholder");
+    editor.value = currentText();
+    editor.rows = 1;
+    const minHeight = Math.round(note.size * LINE_HEIGHT);
+    fitTextarea(editor, minHeight);
+    requestAnimationFrame(() => {
+      editor.focus();
+      const end = editor.value.length;
+      editor.setSelectionRange(end, end);
+    });
+
+    let done = false;
+    const finish = async (save) => {
+      if (done) return;
+      done = true;
+      if (save) {
+        const next = editor.value.replace(/\s+$/, "");
+        if (next !== currentText()) {
+          if (next) note.texts[dateKey] = next;
+          else delete note.texts[dateKey];
+          await ctx.save();
+        }
+      }
+      showText();
+    };
+
+    editor.oninput = () => fitTextarea(editor, minHeight);
+    editor.onkeydown = (e) => {
+      // Ignore Enter that merely confirms an IME composition (Chinese/Japanese input).
+      if (e.isComposing || e.keyCode === 229) return;
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        finish(true);
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        finish(false);
+      }
+    };
+    editor.onblur = () => finish(true);
+  }
+
+  showText();
+}
+
+function openNoteSettings(ctx, kind) {
+  const { plugin, t } = ctx;
+  const note = getNote(ctx.settings, kind);
+  const modal = new FullPageModal(plugin.app, {
+    title: t("note.settingsTitle"),
+    titleClass: "yd-settings-modal",
+    render: (root, instance) => renderNoteSettings(root, ctx, note, instance),
+    onClose: () => ctx.refresh()
+  });
+  modal.open();
+  modal.modalEl?.addClass("yd-note-modal");
+}
+
+function renderNoteSettings(root, ctx, note, modal) {
+  const { t } = ctx;
+  root.empty();
+  root.createDiv({ cls: "yd-settings-desc", text: t("note.settingsDesc") });
+
+  const fields = root.createDiv({ cls: "yd-note-fields" });
+
+  const colorRow = fields.createDiv({ cls: "yd-note-field" });
+  colorRow.createSpan({ cls: "yd-note-field-label", text: t("note.textColor") });
+  const colorWrap = colorRow.createDiv({ cls: "yd-color-wrap" });
+  const colorBtn = colorWrap.createEl("button", {
+    cls: "yd-color-button yd-note-color-btn",
+    attr: { type: "button" }
+  });
+  colorBtn.style.backgroundColor = note.color;
+  colorBtn.title = t("common.preview");
+
+  let palette = null;
+  let closeOutside = null;
+  const closePalette = () => {
+    if (palette) {
+      palette.remove();
+      palette = null;
+    }
+    if (closeOutside) {
+      document.removeEventListener("mousedown", closeOutside, true);
+      closeOutside = null;
+    }
+  };
+  colorBtn.onclick = (evt) => {
+    evt.stopPropagation();
+    if (palette) {
+      closePalette();
+      return;
+    }
+    palette = colorWrap.createDiv({ cls: "yd-color-palette yd-note-palette" });
+    PALETTE.forEach((entry) => {
+      const swatch = palette.createDiv({ cls: "yd-color-swatch" });
+      swatch.style.backgroundColor = entry.color;
+      swatch.title = entry.name;
+      if (entry.color.toLowerCase() === note.color.toLowerCase()) swatch.addClass("is-selected");
+      swatch.addEventListener("mousedown", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      });
+      swatch.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        note.color = entry.color;
+        colorBtn.style.backgroundColor = entry.color;
+        await ctx.save();
+        closePalette();
+      });
+    });
+    closeOutside = (e) => {
+      if (palette && palette.contains(e.target)) return;
+      if (colorBtn.contains(e.target)) return;
+      closePalette();
+    };
+    document.addEventListener("mousedown", closeOutside, true);
+  };
+
+  const sizeRow = fields.createDiv({ cls: "yd-note-field" });
+  sizeRow.createSpan({ cls: "yd-note-field-label", text: t("note.textSize") });
+  const select = sizeRow.createEl("select", { cls: "yd-select yd-note-size-select" });
+  NOTE_FONT_SIZES.forEach((size) => {
+    const option = select.createEl("option", { text: String(size) });
+    option.value = String(size);
+  });
+  select.value = String(note.size);
+  select.onchange = async () => {
+    const next = Number(select.value);
+    if (!NOTE_FONT_SIZES.includes(next)) return;
+    note.size = next;
+    await ctx.save();
+  };
+
+  root.createDiv({ cls: "yd-note-tips", text: t("note.tips") });
+
+  const actions = root.createDiv({ cls: "yd-modal-actions yd-modal-actions-end" });
+  const okBtn = actions.createEl("button", { cls: "yd-modal-confirm", text: t("common.confirm") });
+  okBtn.onclick = () => {
+    closePalette();
+    modal.close();
+  };
+}
+
+module.exports = {
+  renderSmall: (parent, ctx) => renderStickyNote(parent, ctx, "small"),
+  renderLarge: (parent, ctx) => renderStickyNote(parent, ctx, "large"),
+  openSettings: openNoteSettings,
+  getNote
+};
+
+};
+
 __yd_modules["lib/note-search"] = function(module, exports, require) {
 "use strict";
 
@@ -5004,6 +5288,7 @@ const checkInSection = __yd_require("lib/sections/check-in");
 const momentsSection = __yd_require("lib/sections/daily-moments");
 const plannerSection = __yd_require("lib/sections/monthly-planner");
 const quickEntriesSection = __yd_require("lib/sections/quick-entries");
+const stickyNoteSection = __yd_require("lib/sections/sticky-note");
 const mobileDashboard = __yd_require("lib/mobile-dashboard");
 const mobileComposerScroll = __yd_require("lib/mobile-composer-scroll");
 
@@ -5180,15 +5465,23 @@ class YoriDashboardView extends ItemView {
       checkIn: () => checkInSection.render(colLeft, ctx),
       taskBox: () => taskBoxSection.render(colRight, ctx),
       dailyMoments: () => momentsSection.render(colRight, ctx),
-      monthlyPlanner: () => plannerSection.render(colRight, ctx)
+      monthlyPlanner: () => plannerSection.render(colRight, ctx),
+      noteSmall: () => stickyNoteSection.renderSmall(colLeft, ctx),
+      noteLarge: () => stickyNoteSection.renderLarge(colRight, ctx)
     };
 
-    const order = settings.sectionOrder || { groupA: ["dataLog", "checkIn"], groupB: ["taskBox", "dailyMoments", "monthlyPlanner"] };
+    // The sticky notes are opt-in: hidden unless explicitly switched on.
+    const isShown = (key) =>
+      key === "noteSmall" || key === "noteLarge"
+        ? settings.showSection?.[key] === true
+        : settings.showSection?.[key] !== false;
+
+    const order = settings.sectionOrder || DEFAULT_SETTINGS.sectionOrder;
     (order.groupA || []).forEach((key) => {
-      if (settings.showSection?.[key] !== false && renderers[key]) renderers[key]();
+      if (isShown(key) && renderers[key]) renderers[key]();
     });
     (order.groupB || []).forEach((key) => {
-      if (settings.showSection?.[key] !== false && renderers[key]) renderers[key]();
+      if (isShown(key) && renderers[key]) renderers[key]();
     });
 
     quickEntriesSection.renderSide(colLeft, "left", ctx);
@@ -5292,7 +5585,9 @@ class YoriDashboardSettingTab extends PluginSettingTab {
       checkIn: "settings.section.checkIn",
       taskBox: "settings.section.taskBox",
       dailyMoments: "settings.section.dailyMoments",
-      monthlyPlanner: "settings.section.monthlyPlanner"
+      monthlyPlanner: "settings.section.monthlyPlanner",
+      noteSmall: "settings.section.noteSmall",
+      noteLarge: "settings.section.noteLarge"
     };
 
     const renderGroup = (groupKey) => {
@@ -5311,7 +5606,11 @@ class YoriDashboardSettingTab extends PluginSettingTab {
         const toggleWrap = row.createDiv({ cls: "yd-section-order-toggle" });
         const toggle = new ToggleComponent(toggleWrap);
         toggle
-          .setValue(this.plugin.settings.showSection[key] !== false)
+          .setValue(
+            key === "noteSmall" || key === "noteLarge"
+              ? this.plugin.settings.showSection[key] === true
+              : this.plugin.settings.showSection[key] !== false
+          )
           .onChange(async (value) => {
             this.plugin.settings.showSection[key] = value;
             await this.plugin.saveSettings();

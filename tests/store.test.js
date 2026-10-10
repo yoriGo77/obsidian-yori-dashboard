@@ -83,3 +83,43 @@ test("normalizeDailyMoments sorts moments by time of day", () => {
     ["a", "b"]
   );
 });
+
+
+test("sticky notes default to hidden, with title-sized muted text", () => {
+  const settings = store.normalizeSettings(null);
+  assert.equal(settings.showSection.noteSmall, false);
+  assert.equal(settings.showSection.noteLarge, false);
+  assert.equal(settings.data.notes.small.size, 17);
+  assert.equal(settings.data.notes.large.color, "#c4b6a0");
+  assert.equal(settings.sectionOrder.groupA[0], "noteSmall");
+  assert.equal(settings.sectionOrder.groupB[0], "noteLarge");
+});
+
+test("sticky notes are placed first in an existing saved section order", () => {
+  const settings = store.normalizeSettings({
+    sectionOrder: { groupA: ["checkIn", "dataLog"], groupB: ["monthlyPlanner", "taskBox", "dailyMoments"] }
+  });
+  assert.deepEqual(settings.sectionOrder.groupA, ["noteSmall", "checkIn", "dataLog"]);
+  assert.deepEqual(settings.sectionOrder.groupB, ["noteLarge", "monthlyPlanner", "taskBox", "dailyMoments"]);
+});
+
+test("normalizeNotes keeps per-date texts and repairs invalid values", () => {
+  const notes = store.normalizeNotes({
+    small: {
+      texts: { "2026-10-10": "hello\nworld", "2026-10-11": "", "bad-key": "x", "2026-10-12": 5 },
+      color: "#95cd81",
+      size: 24
+    },
+    large: { texts: "oops", color: "red", size: 99 }
+  });
+  assert.deepEqual(notes.small, { texts: { "2026-10-10": "hello\nworld" }, color: "#95cd81", size: 24 });
+  assert.deepEqual(notes.large, { texts: {}, color: "#c4b6a0", size: 17 });
+});
+
+test("normalizeNotes files a legacy undated text under today", () => {
+  const { formatDateKey } = require("../lib/date-utils");
+  const today = formatDateKey(new Date());
+  const notes = store.normalizeNotes({ small: { text: "old note" } });
+  assert.deepEqual(notes.small.texts, { [today]: "old note" });
+  assert.equal("text" in notes.small, false);
+});
